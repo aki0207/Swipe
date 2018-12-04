@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Swipe</string>
+
+    <string-array name="list">
+        <item>交遊費</item>
+        <item>生活費</item>
+        <item>飲食費</item>
+        <item>買い物費</item>
+        <item>その他1</item>
+        <item>その他2</item>
+    </string-array>
+</resources>
