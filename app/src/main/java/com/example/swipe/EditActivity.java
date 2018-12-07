@@ -31,9 +31,9 @@ public class EditActivity extends Abstract {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_amount_used_list);
 
-        year = getIntent().getStringExtra("YEAR");
-        month = getIntent().getStringExtra("MONTH");
-        day = getIntent().getStringExtra("DAY");
+        year = String.valueOf(getIntent().getIntExtra("YEAR",0));
+        month = String.valueOf(getIntent().getIntExtra("MONTH",0));
+        day = String.valueOf(getIntent().getIntExtra("DAY",0));
 
         //ヘッダーに日付挿入
         TextView header = (TextView) findViewById(R.id.current_day);
