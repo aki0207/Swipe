@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TableRow xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:background="@layout/style_border"
+        android:padding="5dp"
+        android:textAlignment="center"
+        android:textSize="18sp"
+        android:layout_weight="1"/>
+
+    <TextView
+        android:background="@layout/style_border"
+        android:padding="5dp"
+        android:textAlignment="center"
+        android:textSize="18sp"
+        android:layout_weight="1"/>
+
+</TableRow>

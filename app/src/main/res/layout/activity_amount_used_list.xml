@@ -15,232 +15,102 @@
             android:id="@+id/current_day"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="○年○月○日"
+            android:background="#4169e1"
             android:gravity="center"
-            android:textSize="30sp"
-            android:background="#4169e1"/>
-    </LinearLayout>
+            android:text="○年○月○日"
+            android:textSize="30sp" />
 
-    <LinearLayout
-        android:id="@+id/base"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
-
-
-
-        <LinearLayout
+        <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/textView"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="使用した総額"
-                android:gravity="center"
-                android:layout_marginTop="60dp"
-                android:textSize="24sp"/>
-
-            <TextView
-                android:id="@+id/the_amount"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="0円"
-                android:gravity="center"
-                android:textSize="24sp"/>
-        </LinearLayout>
-
-
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="20dp">
-
-            <TextView
-                android:id="@+id/category_excursion_fee"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="・交遊費"
-                android:gravity="center"
-                android:textSize="24sp"/>
-
-            <TextView
-                android:id="@+id/category_cost_of_living"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="・生活費"
-                android:gravity="center"
-                android:textSize="24sp"/>
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="20dp">
-
-            <TextView
-                android:id="@+id/excursion_fee"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="0円"
-                android:gravity="center"
-                android:textSize="24sp"/>
-
-            <TextView
-                android:id="@+id/cost_of_living"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="0円"
-                android:gravity="center"
-                android:textSize="24sp"/>
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="20dp">
-
-            <TextView
-                android:id="@+id/category_food_cost"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="・飲食費"
-                android:gravity="center"
-                android:textSize="24sp"/>
-
-            <TextView
-                android:id="@+id/category_shopping_expenses"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="・買い物費"
-                android:gravity="center"
-                android:textSize="24sp"/>
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="20dp">
-
-            <TextView
-                android:id="@+id/food_cost"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="0円"
-                android:gravity="center"
-                android:textSize="24sp"/>
-
-            <TextView
-                android:id="@+id/shopping_expenses"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="0円"
-                android:gravity="center"
-                android:textSize="24sp"/>
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="20dp">
-
-            <TextView
-                android:id="@+id/category_other_one"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="・その他1"
-                android:gravity="center"
-                android:textSize="24sp"/>
-
-            <TextView
-                android:id="@+id/category_other_two"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="・その他2"
-                android:gravity="center"
-                android:textSize="24sp"/>
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="20dp">
-
-            <TextView
-                android:id="@+id/other_one"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="0円"
-                android:gravity="center"
-                android:textSize="24sp"/>
-
-            <TextView
-                android:id="@+id/other_two"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="0円"
-                android:gravity="center"
-                android:textSize="24sp"/>
-
-        </LinearLayout>
-
-
-
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="20dp">
+            android:layout_height="match_parent">
 
             <Button
                 android:id="@+id/back_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentTop="true"
                 android:text="戻る" />
+
+            <LinearLayout
+                android:id="@+id/linearLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@+id/go_edit_page"
+                android:layout_alignTop="@+id/back_button"
+                android:layout_toLeftOf="@+id/go_edit_page"
+                android:layout_toRightOf="@+id/back_button">
+
+                <TextView
+                    android:id="@+id/textView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:text="使用した総額"
+                    android:textSize="24sp" />
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/the_amount"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/linearLayout"
+                android:gravity="center"
+                android:text="0円"
+                android:textSize="24sp" />
 
             <Button
                 android:id="@+id/go_edit_page"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="編集" />
+                android:layout_alignParentRight="true"
+                android:layout_alignParentTop="true"
+                android:text="編集へ" />
 
+        </RelativeLayout>
+
+
+    </LinearLayout>
+
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="150dp">
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:id="@+id/search_table"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+            </TableLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <Button
+                    android:id="@+id/clear_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="クリア" />
+
+            </LinearLayout>
 
         </LinearLayout>
 
 
+    </ScrollView>
 
-
-
-
-    </LinearLayout>
 
 </android.support.v4.widget.DrawerLayout>

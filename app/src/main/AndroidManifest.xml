@@ -16,11 +16,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".LeftActivity" />
-        <activity android:name=".RightActivity" />
-        <activity android:name=".AmountUsedListActivity" />
         <activity android:name=".AmountUsedList" />
-        <activity android:name=".EditActivity"></activity>
+        <activity android:name=".EditActivity" />
+        <activity android:name=".testActivity"></activity>
     </application>
 
 </manifest>

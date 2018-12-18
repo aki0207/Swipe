@@ -1,14 +1,14 @@
 package com.example.swipe;
 
-import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 import android.graphics.Color;
 import android.icu.util.Calendar;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.RequiresApi;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.GestureDetector;
 import android.view.Gravity;
@@ -17,28 +17,67 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 public class MainActivity extends Abstract {
 
-
-    private final int WC = ViewGroup.LayoutParams.WRAP_CONTENT;
-    private final int MP = ViewGroup.LayoutParams.MATCH_PARENT;
 
     //スワイプ用
     private static final int SWIPE_MIN_DISTANCE = 120;
     private static final int SWIPE_MAX_OFF_PATH = 250;
     private static final int SWIPE_THRESHOLD_VELOCITY = 200;
+    private final int WC = ViewGroup.LayoutParams.WRAP_CONTENT;
+    private final int MP = ViewGroup.LayoutParams.MATCH_PARENT;
+
     //日付け格納用
     int current_year = 0;
     int current_month = 0;
+    //スワイプ判定
+    private final GestureDetector.SimpleOnGestureListener mOnGestureListener = new GestureDetector.SimpleOnGestureListener() {
+        @Override
+        public boolean onFling(MotionEvent event1, MotionEvent event2, float velocityX, float velocityY) {
+
+            try {
+
+                if (Math.abs(event1.getY() - event2.getY()) > SWIPE_MAX_OFF_PATH) {
+                    // 縦の移動距離が大きすぎる場合は無視
+                    return false;
+                }
+
+                if (event1.getX() - event2.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
+
+                    Intent intent = new Intent(MainActivity.this, MainActivity.class);
+                    intent.putExtra("YEAR", current_year);
+                    intent.putExtra("MONTH", current_month + 1);
+
+                    startActivity(intent);
+                    overridePendingTransition(R.animator.activity_open_enter, R.animator.activity_open_exit);
+
+                } else if (event2.getX() - event1.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
+
+                    Intent intent = new Intent(MainActivity.this, MainActivity.class);
+                    intent.putExtra("YEAR", current_year);
+                    intent.putExtra("MONTH", current_month - 1);
+
+                    startActivity(intent);
+                    overridePendingTransition(R.animator.activity_close_enter, R.animator.activity_close_exit);
+                }
+
+            } catch (Exception e) {
+                // nothing
+            }
+            return false;
+        }
+    };
+    //DB関連
+    Cursor c;
+    SQLiteDatabase db;
+    DbOpenHelper helper;
     int evacuate_day = 0;
-
-    private GestureDetector mGestureDetector;
-
     //setTagで使う
     Object obj;
+    private GestureDetector mGestureDetector;
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
@@ -48,18 +87,15 @@ public class MainActivity extends Abstract {
 
         mGestureDetector = new GestureDetector(this, mOnGestureListener);
 
-
         current_year = getIntent().getIntExtra("YEAR", -999);
         current_month = getIntent().getIntExtra("MONTH", -999);
-
-        Month month = new Month();
+        Calendar cal = Calendar.getInstance();
 
         //起動後、ページ移動していない状態(intentに値があるかで判断)なら当月を取得
         if (current_year == -999 || current_month == -999) {
 
-            current_year = month.cal.get(Calendar.YEAR);
-            current_month = month.cal.get(Calendar.MONTH) + 1;
-
+            current_year = cal.get(Calendar.YEAR);
+            current_month = cal.get(Calendar.MONTH) + 1;
             //0月なんてものは存在しない
         } else if (current_month < 1) {
 
@@ -74,17 +110,16 @@ public class MainActivity extends Abstract {
 
         }
 
-        month.cal.set(Calendar.YEAR, current_year);
-        month.cal.set(Calendar.MONTH, current_month - 1);
-        month.cal.set(Calendar.DATE, 1);
+        cal.set(Calendar.YEAR, current_year);
+        cal.set(Calendar.MONTH, current_month - 1);
+        cal.set(Calendar.DATE, 1);
 
-
+        //レイアウトを作成していく
         // ヘッダー部分を作成する
         LinearLayout headerLayout = new LinearLayout(this);
         headerLayout.setOrientation(LinearLayout.VERTICAL);
         headerLayout.setLayoutParams(new LinearLayout.LayoutParams(MP, MP));
         setContentView(headerLayout);
-
 
         //ヘッダーに表示する文字、背景色等を設定する
         TextView textView = new TextView(this);
@@ -101,10 +136,44 @@ public class MainActivity extends Abstract {
                 new LinearLayout.LayoutParams(MP, WC));
 
 
+        String current_day_used_sql = String.valueOf(current_year) + "-" + String.valueOf(current_month);
+        RelativeLayout relativeLayout = new RelativeLayout(this);
+        headerLayout.addView(relativeLayout);
+        //こいつで画面上部のええ感じのとこに配置する
+        RelativeLayout.LayoutParams top_center_params = new RelativeLayout.LayoutParams(WC, WC);
+        top_center_params.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+        top_center_params.addRule(RelativeLayout.CENTER_HORIZONTAL);
+        top_center_params.setMargins(0, 60, 0, 0);
+
+
+        //文言
+        TextView the_amount_text = new TextView(this);
+        the_amount_text.setText("当月使用金額");
+        the_amount_text.setId(View.generateViewId());
+        the_amount_text.setBackgroundResource(R.drawable.under_line);
+        the_amount_text.setTextSize(24);
+        relativeLayout.addView(the_amount_text, top_center_params);
+
+
+        LinearLayout amountLayout = new LinearLayout(this);
+        LinearLayout.LayoutParams amountParams = new LinearLayout.LayoutParams(MP, WC);
+        amountParams.setMargins(0, 30, 0, 0);
+        amountLayout.setLayoutParams(amountParams);
+        headerLayout.addView(amountLayout);
+
+        //金額
+        TextView the_amount = new TextView(this);
+        the_amount.setText("0円");
+        //当月の総使用額を取得
+        the_amount = calculateTotalAmount(the_amount, current_day_used_sql);
+        the_amount.setGravity(Gravity.CENTER);
+        amountLayout.addView(the_amount, MP, WC);
+
+
         //カレンダー部分を作成していく
         LinearLayout base_layout = new LinearLayout(this);
         base_layout.setOrientation(LinearLayout.VERTICAL);
-        base_layout.setLayoutParams(new LinearLayout.LayoutParams(MP, MP,1));
+        base_layout.setLayoutParams(new LinearLayout.LayoutParams(MP, MP, 1));
         headerLayout.addView(base_layout);
 
 
@@ -112,7 +181,7 @@ public class MainActivity extends Abstract {
         LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) base_layout.getLayoutParams();
         params.setMargins(0, 350, 0, 0);
         base_layout.setLayoutParams(params);
-        base_layout.setLayoutParams(params);
+        //base_layout.setLayoutParams(params);
 
 
         //レイアウトを入れ子にする
@@ -179,20 +248,16 @@ public class MainActivity extends Abstract {
         base_layout.addView(linearLayout);
 
 
-
-
-
-
         //Calendarインスタンスを生成。先月の月をセット
         Calendar last_month_cal = Calendar.getInstance();
         last_month_cal.set(current_year, current_month - 2, 1);
 
         //当月の最終日
-        int max_day = month.cal.getActualMaximum(Calendar.DAY_OF_MONTH);
+        int max_day = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
         //前月の最終日
         int last_month_max_day = last_month_cal.getActualMaximum(Calendar.DAY_OF_MONTH);
         //1日の曜日
-        final int start_index = month.cal.get(Calendar.DAY_OF_WEEK);
+        final int start_index = cal.get(Calendar.DAY_OF_WEEK);
         //今月の1日の曜日までを先月の末尾日を表示して埋めるための数字
         last_month_max_day = last_month_max_day - (start_index - 2);
 
@@ -215,30 +280,37 @@ public class MainActivity extends Abstract {
 
         for (int i = 1; i <= max_day; i++) {
 
-            month.cal.set(Calendar.DATE, i);
+
+            cal.set(Calendar.DATE, i);
             //ohter_day = new TextView(this);
             current_day = new Button(this);
             current_day.setText(String.valueOf(i));
             current_day.setGravity(Gravity.TOP);
+            current_day.setGravity(Gravity.LEFT);
+
             current_day.setBackgroundResource(R.drawable.text_layout);
+/*
+            if (i == 25) {
+                current_day.setBackgroundResource(R.drawable.blue_siren);
+            } else if (i == 12) {
+                current_day.setBackgroundResource(R.drawable.red_siren);
+            }else {
+
+            }*/
+
+
             //ボタンに番号を持たせる
             obj = i;
             current_day.setTag(obj);
 
-
-            if (Calendar.SATURDAY == month.cal.get(Calendar.DAY_OF_WEEK)) {
-
+            if (Calendar.SATURDAY == cal.get(Calendar.DAY_OF_WEEK)) {
                 current_day.setTextColor(Color.parseColor("#00bfff"));
-
-            } else if (Calendar.SUNDAY == month.cal.get(Calendar.DAY_OF_WEEK)) {
-
+            } else if (Calendar.SUNDAY == cal.get(Calendar.DAY_OF_WEEK)) {
                 current_day.setTextColor(Color.parseColor("#ff0000"));
             }
 
-    /*        final Context context = getApplicationContext();
-            final CharSequence text = "クリックしました";
-            final CharSequence move_text = "移動を確認";
-            final int duration = Toast.LENGTH_SHORT;*/
+
+
 
             //ここでリスナー設定しとくことで全ボタンに設定できる気がする
             current_day.setOnTouchListener(new View.OnTouchListener() {
@@ -257,23 +329,21 @@ public class MainActivity extends Abstract {
                     String evacuate_string = String.valueOf(v.getTag());
                     int chosen_button_num = Integer.parseInt(evacuate_string);
 
-                    Intent intent = new Intent(MainActivity.this,AmountUsedList.class);
-                    intent.putExtra("YEAR",current_year);
-                    intent.putExtra("MONTH",current_month);
-                    intent.putExtra("DAY",chosen_button_num);
+                    Intent intent = new Intent(MainActivity.this, AmountUsedList.class);
+                    intent.putExtra("YEAR", String.valueOf(current_year));
+                    intent.putExtra("MONTH", String.valueOf(current_month));
+                    intent.putExtra("DAY", String.valueOf(chosen_button_num));
                     startActivity(intent);
 
                 }
             });
 
 
-
-
             linearLayout.addView(current_day, param1);
 
 
             //土曜日なら次の列へ
-            if (Calendar.SATURDAY == month.cal.get(Calendar.DAY_OF_WEEK)) {
+            if (Calendar.SATURDAY == cal.get(Calendar.DAY_OF_WEEK)) {
 
                 linearLayout = new LinearLayout(this);
                 linearLayout.setOrientation(LinearLayout.HORIZONTAL);
@@ -285,10 +355,10 @@ public class MainActivity extends Abstract {
         }
 
         //当月の最終日が土曜日じゃない時、土曜日まで次の月の日付で埋める
-        if (month.cal.get(Calendar.DAY_OF_WEEK) != 7) {
+        if (cal.get(Calendar.DAY_OF_WEEK) != 7) {
 
             int i = 1;
-            for (int count = month.cal.get(Calendar.DAY_OF_WEEK); count < 7; count++) {
+            for (int count = cal.get(Calendar.DAY_OF_WEEK); count < 7; count++) {
 
                 ohter_day = new TextView(this);
                 ohter_day.setText(String.valueOf(i));
@@ -301,52 +371,51 @@ public class MainActivity extends Abstract {
             }
         }
 
-
-
     }
 
+    //当月の総使用金額をTextViewにセットする
+    public TextView calculateTotalAmount(TextView pTextVie, String pCurentDay) {
 
+        try {
+
+            //金額取得
+            if (helper == null) {
+                helper = new DbOpenHelper(this);
+            }
+            if (db == null) {
+                db = helper.getReadableDatabase();
+            }
+
+            //総額
+            String sql = "select sum(price) from amount_used where date like '%' || ? || '%' ESCAPE '$'";
+            c = db.rawQuery(sql, new String[]{pCurentDay});
+            boolean isEof = c.moveToFirst();
+            while (isEof) {
+
+                pTextVie.setText(String.format("%d", c.getInt(0)) + "円");
+                pTextVie.setTextSize(24);
+                isEof = c.moveToNext();
+            }
+
+        } catch (SQLiteException e) {
+            e.printStackTrace();
+        } finally {
+            if (c != null) {
+                c.close();
+            }
+            if (db != null) {
+                db.close();
+            }
+
+        }
+
+        return pTextVie;
+
+    }
 
     // これがないとGestureDetectorが動かない
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         return mGestureDetector.onTouchEvent(event);
     }
-
-    private final GestureDetector.SimpleOnGestureListener mOnGestureListener = new GestureDetector.SimpleOnGestureListener() {
-        @Override
-        public boolean onFling(MotionEvent event1, MotionEvent event2, float velocityX, float velocityY) {
-
-            try {
-
-                if (Math.abs(event1.getY() - event2.getY()) > SWIPE_MAX_OFF_PATH) {
-                    // 縦の移動距離が大きすぎる場合は無視
-                    return false;
-                }
-
-                if (event1.getX() - event2.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
-
-                    Intent intent = new Intent(MainActivity.this, MainActivity.class);
-                    intent.putExtra("YEAR", current_year);
-                    intent.putExtra("MONTH", current_month + 1);
-
-                    startActivity(intent);
-                    overridePendingTransition(R.animator.activity_open_enter, R.animator.activity_open_exit);
-
-                } else if (event2.getX() - event1.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
-
-                    Intent intent = new Intent(MainActivity.this, MainActivity.class);
-                    intent.putExtra("YEAR", current_year);
-                    intent.putExtra("MONTH", current_month - 1);
-
-                    startActivity(intent);
-                    overridePendingTransition(R.animator.activity_close_enter, R.animator.activity_close_exit);
-                }
-
-            } catch (Exception e) {
-                // nothing
-            }
-            return false;
-        }
-    };
 }

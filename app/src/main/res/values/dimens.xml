@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--アンダーラインの太さ-->
+    <dimen name="borderWidth">4dp</dimen>
+    <!--アンダーラインとの距離-->
+    <dimen name="borderPadding">4dp</dimen>
+</resources>

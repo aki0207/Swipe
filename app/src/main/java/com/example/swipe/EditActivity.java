@@ -29,11 +29,11 @@ public class EditActivity extends Abstract {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_amount_used_list);
+        setContentView(R.layout.activity_edit);
 
-        year = String.valueOf(getIntent().getIntExtra("YEAR",0));
-        month = String.valueOf(getIntent().getIntExtra("MONTH",0));
-        day = String.valueOf(getIntent().getIntExtra("DAY",0));
+        year = getIntent().getStringExtra("YEAR");
+        month = getIntent().getStringExtra("MONTH");
+        day = getIntent().getStringExtra("DAY");
 
         //ヘッダーに日付挿入
         TextView header = (TextView) findViewById(R.id.current_day);
@@ -42,11 +42,11 @@ public class EditActivity extends Abstract {
 
         //1ケタなら0埋めかます
         if (month.length() == 1) {
-            month = String.format("%02d", month);
+            month = String.format("%02d", Integer.parseInt(month));
         }
 
         if (day.length() == 1) {
-            day = String.format("%02d", day);
+            day = String.format("%02d", Integer.parseInt(day));
         }
 
         //Sqlで使う
@@ -60,7 +60,7 @@ public class EditActivity extends Abstract {
             @Override
             public void onClick(View v) {
 
-                Intent intent = new Intent(EditActivity.this, MainActivity.class);
+                Intent intent = new Intent(EditActivity.this, AmountUsedList.class);
                 setCurrentDay(intent, year, month, day);
                 startActivity(intent);
 
@@ -74,16 +74,11 @@ public class EditActivity extends Abstract {
 
 
                 if (helper == null) {
-
                     helper = new DbOpenHelper(getApplicationContext());
-
                 }
 
-
                 if (db == null) {
-
                     db = helper.getWritableDatabase();
-
                 }
 
                 Spinner spinner = (Spinner) findViewById(R.id.spinner);
@@ -102,24 +97,14 @@ public class EditActivity extends Abstract {
 
                 //検索結果がなければ追加する
                 if (c.getCount() == 0) {
-
                     insertData(db, current_day, selected_category, Integer.parseInt(entered_price));
-
-
                     //結果があるなら対象を更新
                 } else {
-
-
-            /*        boolean isEof = c.moveToFirst();
-                    while (isEof) {
-                        TextView tv = (TextView) findViewById(R.id.the_amount);
-                        tv.setText(String.format("%d", c.getInt(0)));
-                        isEof = c.moveToNext();
-                    }*/
 
                     ContentValues values = new ContentValues();
                     values.put("category", selected_category);
                     values.put("price", entered_price);
+
 
                     db.beginTransaction();
                     db.update("amount_used", values, "category = '" + selected_category + "'", null);
@@ -127,20 +112,21 @@ public class EditActivity extends Abstract {
                     db.endTransaction();
                     Context context = getApplicationContext();
                     Toast.makeText(context, "更新が完了しました", Toast.LENGTH_SHORT).show();
-                }
 
+                }
 
             }
         });
 
     }
 
-    private void insertData(SQLiteDatabase db, String date, String category, int price) {
+    //dbに値を登録する
+    private void insertData(SQLiteDatabase pDb, String pDate, String pCategory, int pPrice) {
 
         ContentValues values = new ContentValues();
-        values.put("date", date);
-        values.put("category", category);
-        values.put("price", price);
+        values.put("date", pDate);
+        values.put("category", pCategory);
+        values.put("price", pPrice);
 
         db.insert("amount_used", null, values);
         Context context = getApplication();
