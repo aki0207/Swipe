@@ -1,9 +1,21 @@
 package com.example.swipe;
 
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.support.v7.app.AppCompatActivity;
 
 public class Abstract extends AppCompatActivity  {
+
+    SQLiteDatabase db;
+    DbOpenHelper helper;
+    Cursor c;
+
+
+    String year = "";
+    String month = "";
+    String day = "";
+    String current_day = "";
 
     public Intent setCurrentDay (Intent intent,String pYear, String pMonth, String pDay) {
 
@@ -14,6 +26,19 @@ public class Abstract extends AppCompatActivity  {
         return intent;
 
     }
+
+    //1ケタなら0埋めかます
+    public String zeroPadding(String pValue) {
+
+        if (pValue.length() == 1) {
+            pValue = String.format("%02d", Integer.parseInt(pValue));
+        }
+        return pValue;
+    }
+
+
+
+
 
 
 

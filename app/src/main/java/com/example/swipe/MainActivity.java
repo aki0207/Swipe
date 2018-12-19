@@ -70,10 +70,7 @@ public class MainActivity extends Abstract {
             return false;
         }
     };
-    //DB関連
-    Cursor c;
-    SQLiteDatabase db;
-    DbOpenHelper helper;
+
     int evacuate_day = 0;
     //setTagで使う
     Object obj;
@@ -287,11 +284,20 @@ public class MainActivity extends Abstract {
             current_day.setText(String.valueOf(i));
             current_day.setGravity(Gravity.TOP);
             current_day.setGravity(Gravity.LEFT);
+            //当日の使用金額によりアイコンを表示させる
+            int usage_amount_of_the_day = 0;
+            usage_amount_of_the_day = usageAmountOfTheDay(String.valueOf(i));
 
-            current_day.setBackgroundResource(R.drawable.text_layout);
+            if (usage_amount_of_the_day > 3000 && usage_amount_of_the_day < 5000) {
+                current_day.setBackgroundResource(R.drawable.blue_siren);
+            } else if (usage_amount_of_the_day > 5000) {
+                current_day.setBackgroundResource(R.drawable.red_siren);
+            } else {
+                current_day.setBackgroundResource(R.drawable.text_layout);
+            }
 /*
             if (i == 25) {
-                current_day.setBackgroundResource(R.drawable.blue_siren);
+
             } else if (i == 12) {
                 current_day.setBackgroundResource(R.drawable.red_siren);
             }else {
@@ -308,8 +314,6 @@ public class MainActivity extends Abstract {
             } else if (Calendar.SUNDAY == cal.get(Calendar.DAY_OF_WEEK)) {
                 current_day.setTextColor(Color.parseColor("#ff0000"));
             }
-
-
 
 
             //ここでリスナー設定しとくことで全ボタンに設定できる気がする
@@ -403,14 +407,44 @@ public class MainActivity extends Abstract {
             if (c != null) {
                 c.close();
             }
-            if (db != null) {
+         /*   if (db != null) {
                 db.close();
-            }
+            }*/
 
         }
 
         return pTextVie;
 
+    }
+
+    //当日の使用金額を返す
+    public int usageAmountOfTheDay(String pDay) {
+
+        int usage_amount_of_the_day = 0;
+        pDay = zeroPadding(pDay);
+        String current_day_used_sql = current_year + "-" + current_month + pDay;
+
+        if (helper == null) {
+            helper = new DbOpenHelper(this);
+        }
+        if (db == null) {
+            db = helper.getReadableDatabase();
+        }
+
+
+        String sql = "select sum(price) from amount_used where date = ?";
+        c = db.rawQuery(sql, new String[]{current_day_used_sql});
+        boolean isEof = c.moveToFirst();
+
+        if (c.getCount() == 1) {
+            while (isEof) {
+
+                usage_amount_of_the_day = c.getInt(0);
+                isEof = c.moveToNext();
+
+            }
+        }
+        return usage_amount_of_the_day;
     }
 
     // これがないとGestureDetectorが動かない

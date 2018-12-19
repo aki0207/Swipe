@@ -3,8 +3,8 @@ package com.example.swipe;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -13,12 +13,13 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class EditActivity extends Abstract {
+public class AddActivity extends Abstract {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_edit);
+        setContentView(R.layout.activity_add);
+
 
         //intentから現在の日付取得
         getCurrentDay();
@@ -39,14 +40,15 @@ public class EditActivity extends Abstract {
         back_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(EditActivity.this, AmountUsedList.class);
+                Intent intent = new Intent(AddActivity.this, AmountUsedList.class);
                 setCurrentDay(intent, year, month, day);
                 startActivity(intent);
             }
         });
 
-        Button edit_button = (Button) findViewById(R.id.edit_button);
-        edit_button.setOnClickListener(new View.OnClickListener() {
+
+        Button add_button = (Button) findViewById(R.id.edit_button);
+        add_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (helper == null) {
@@ -61,39 +63,17 @@ public class EditActivity extends Abstract {
                 // 選択されているカテゴリを取得
                 String selected_category = (String) spinner.getSelectedItem();
                 //カテゴリー詳細
-                EditText category_detail = (EditText)findViewById(R.id.category_detail_form);
+                EditText category_detail = (EditText) findViewById(R.id.category_detail_form);
                 String entered_category_detail = category_detail.getText().toString();
                 //金額
                 EditText price_form = (EditText) findViewById(R.id.price_form);
                 String entered_price = price_form.getText().toString();
 
-
-                //更新する前に検索する
-                String sql = "select price from amount_used where date = ? and category = ?";
-                String[] array = {current_day, selected_category};
-                c = db.rawQuery(sql, array);
-
-
-                //検索結果がなければ追加する
-                if (c.getCount() == 0) {
-                    insertData(db, current_day, selected_category, Integer.parseInt(entered_price),entered_category_detail);
-                    //結果があるなら対象を更新
-                } else {
-                    ContentValues values = new ContentValues();
-                    values.put("category", selected_category);
-                    values.put("price", entered_price);
-
-                    db.beginTransaction();
-                    db.update("amount_used", values, "category = '" + selected_category + "'", null);
-                    db.setTransactionSuccessful();
-                    db.endTransaction();
-                    Context context = getApplicationContext();
-                    Toast.makeText(context, "更新が完了しました", Toast.LENGTH_SHORT).show();
-
-                }
-
+                //追加する
+                insertData(db, current_day, selected_category, Integer.parseInt(entered_price), entered_category_detail);
             }
         });
+
 
     }
 
@@ -108,7 +88,7 @@ public class EditActivity extends Abstract {
 
         db.insert("amount_used", null, values);
         Context context = getApplication();
-        Toast.makeText(context, "更新対象がなかったんでとりま新しく作りました", Toast.LENGTH_SHORT).show();
+        Toast.makeText(context, "追加しました", Toast.LENGTH_SHORT).show();
     }
 
     //intentから値を取得
@@ -118,7 +98,7 @@ public class EditActivity extends Abstract {
         day = getIntent().getStringExtra("DAY");
     }
 
-    public void zeroPadding () {
+    public void zeroPadding() {
 
         //1ケタなら0埋めかます
         if (month.length() == 1) {
@@ -129,5 +109,4 @@ public class EditActivity extends Abstract {
             day = String.format("%02d", Integer.parseInt(day));
         }
     }
-
 }

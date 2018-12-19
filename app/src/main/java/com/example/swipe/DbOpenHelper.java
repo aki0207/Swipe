@@ -21,17 +21,18 @@ public class DbOpenHelper extends SQLiteOpenHelper {
                 "create table amount_used("+
                         "   date text not null," +
                         "   category text not null,"+
-                        "   price text"+
+                        "   price text,"+
+                        "   category_detail text not null" +
                         ");"
         );
 
         // table row insert
-        db.execSQL("insert into amount_used(date,category,price) values ('2018-1101','交遊費', 0);");
-        db.execSQL("insert into amount_used(date,category,price) values ('2018-1101','生活費', 0);");
-        db.execSQL("insert into amount_used(date,category,price) values ('2018-1101','飲食費', 0);");
-        db.execSQL("insert into amount_used(date,category,price) values ('2018-1101','買い物費', 0);");
-        db.execSQL("insert into amount_used(date,category,price) values ('2018-1101','その他1', 0);");
-        db.execSQL("insert into amount_used(date,category,price) values ('2018-1101','その他2', 0);");
+        db.execSQL("insert into amount_used(date,category,price,category_detail) values ('2018-1101','交遊費', 0,'盗んだバイク');");
+        db.execSQL("insert into amount_used(date,category,price,category_detail) values ('2018-1101','生活費', 0,'おいしめの雑草');");
+        db.execSQL("insert into amount_used(date,category,price,category_detail) values ('2018-1101','飲食費', 0,' ');");
+        db.execSQL("insert into amount_used(date,category,price,category_detail) values ('2018-1101','買い物費', 0,' ');");
+        db.execSQL("insert into amount_used(date,category,price,category_detail) values ('2018-1101','その他1', 0,' ');");
+        db.execSQL("insert into amount_used(date,category,price,category_detail) values ('2018-1101','その他2', 0,' ');");
 
     }
 

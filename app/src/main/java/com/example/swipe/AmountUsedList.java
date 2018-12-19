@@ -25,6 +25,9 @@ public class AmountUsedList extends Abstract {
     String day = "";
     String current_day;
 
+    //ボタンにsetTagする用
+    Object tag = 0;
+
     //DB関連
     Cursor c;
     SQLiteDatabase db;
@@ -61,13 +64,13 @@ public class AmountUsedList extends Abstract {
             }
         });
 
-        //編集画面へ
-        Button go_edit_button = (Button) findViewById(R.id.go_edit_page);
-        go_edit_button.setOnClickListener(new View.OnClickListener() {
+        //追加画面へ
+        Button go_add_button = (Button) findViewById(R.id.go_add_page);
+        go_add_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-                Intent intent = new Intent(AmountUsedList.this, EditActivity.class);
+                Intent intent = new Intent(AmountUsedList.this, AddActivity.class);
                 intent = setCurrentDay(intent, String.valueOf(year), String.valueOf(month), String.valueOf(day));
                 startActivity(intent);
 
@@ -115,7 +118,7 @@ public class AmountUsedList extends Abstract {
         ArrayList<ArrayList<String>> w_results = new ArrayList<ArrayList<String>>();
 
         //とってきたいのは項目名と金額
-        sql = "select category,price from amount_used where date = ? order by category";
+        sql = "select category,sum(price) from amount_used where date = ? group by category";
         c = db.rawQuery(sql, new String[]{pCurrentDay});
         isEof = c.moveToFirst();
 
@@ -161,8 +164,32 @@ public class AmountUsedList extends Abstract {
             w_table_row = (TableRow) w_view_group.getChildAt(i + 1);
 
             for (int j = 0; j < w_results.get(i).size(); j++) {
-                ((TextView) (w_table_row.getChildAt(j))).setText(w_results.get(i).get(j));
+
+                ((Button) (w_table_row.getChildAt(j))).setText(w_results.get(i).get(j));
+
+                if (j == 0) {
+
+                    tag = w_results.get(i).get(j);
+                    ((Button) (w_table_row.getChildAt(j))).setTag(tag);
+                    ((Button) (w_table_row.getChildAt(j))).setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+
+                            tag = v.getTag();
+                            String selected_category = String.valueOf(tag);
+                            Intent intent = new Intent(AmountUsedList.this,DetailActivity.class);
+                            intent.putExtra("SELECTEDCATEGORY",selected_category);
+                            intent = setCurrentDay(intent, String.valueOf(year), String.valueOf(month), String.valueOf(day));
+                            startActivity(intent);
+
+                        }
+                    });
+
+                }
+
+
             }
+
 
         }
 
@@ -203,6 +230,7 @@ public class AmountUsedList extends Abstract {
 
     }
 
+    //intentに値を取得
     public Intent setCurrentDay(Intent intent, String pYear, String pMonth, String pDay) {
 
         intent.putExtra("YEAR", year);
@@ -213,20 +241,12 @@ public class AmountUsedList extends Abstract {
 
     }
 
+    //intentから値を取得
     public void getCurrentDay() {
 
         year = getIntent().getStringExtra("YEAR");
         month = getIntent().getStringExtra("MONTH");
         day = getIntent().getStringExtra("DAY");
-    }
-
-    //1ケタなら0埋めかます
-    public String zeroPadding(String pValue) {
-
-        if (pValue.length() == 1) {
-            pValue = String.format("%02d", Integer.parseInt(pValue));
-        }
-        return pValue;
     }
 
 
