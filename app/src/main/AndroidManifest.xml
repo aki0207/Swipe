@@ -18,7 +18,9 @@
         </activity>
         <activity android:name=".AmountUsedList" />
         <activity android:name=".EditActivity" />
-        <activity android:name=".testActivity"></activity>
+        <activity android:name=".testActivity" />
+        <activity android:name=".DetailActivity" />
+        <activity android:name=".AddActivity"></activity>
     </application>
 
 </manifest>

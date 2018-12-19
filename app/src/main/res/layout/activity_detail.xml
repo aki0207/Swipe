@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.v4.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/drawer_layout"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
+    android:layout_height="match_parent"
+    tools:context=".DetailActivity">
 
     <LinearLayout
         android:id="@+id/header"
@@ -11,14 +12,14 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/current_day"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="#4169e1"
-            android:gravity="center"
-            android:text="○年○月○日"
-            android:textSize="30sp" />
+    <TextView
+        android:id="@+id/current_day"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#4169e1"
+        android:gravity="center"
+        android:text="○年○月○日"
+        android:textSize="30sp" />
 
         <RelativeLayout
             android:layout_width="match_parent"
@@ -38,11 +39,10 @@
                 android:layout_height="wrap_content"
                 android:layout_alignBottom="@+id/go_edit_page"
                 android:layout_alignTop="@+id/back_button"
-                android:layout_toLeftOf="@+id/go_add_page"
+                android:layout_toLeftOf="@+id/go_edit_page"
                 android:layout_toRightOf="@+id/back_button">
 
                 <TextView
-                    android:id="@+id/textView"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:gravity="center"
@@ -52,7 +52,7 @@
             </LinearLayout>
 
             <TextView
-                android:id="@+id/the_amount"
+                android:id="@+id/total_category"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/linearLayout"
@@ -60,25 +60,34 @@
                 android:text="0円"
                 android:textSize="24sp" />
 
+            <!--レイアウトのつじつま合わせに使ってる-->
             <Button
-                android:id="@+id/go_add_page"
+                android:id="@+id/go_edit_page"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentRight="true"
                 android:layout_alignParentTop="true"
-                android:text="追加へ" />
+                android:visibility="invisible" />
 
         </RelativeLayout>
 
 
+
+
+
     </LinearLayout>
+
+
+
+
+
+
 
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginTop="150dp">
-
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -105,11 +114,8 @@
                     android:text="クリア" />
 
             </LinearLayout>
-
         </LinearLayout>
-
-
     </ScrollView>
 
 
-</android.support.v4.widget.DrawerLayout>
+</android.support.constraint.ConstraintLayout>
