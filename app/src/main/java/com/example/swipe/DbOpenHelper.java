@@ -6,7 +6,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 public class DbOpenHelper extends SQLiteOpenHelper {
-    final static private int DB_VERSION = 1;
+    final static private int DB_VERSION = 2;
     SharedPreferences pref;
     boolean flg = false;
 
@@ -39,5 +39,12 @@ public class DbOpenHelper extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         // データベースの変更が生じた場合は、ここに処理を記述する。
+
+        //列を追加することになった
+        db.execSQL(
+                "alter table  amount_used add category_detail text"
+        );
+
+
     }
 }

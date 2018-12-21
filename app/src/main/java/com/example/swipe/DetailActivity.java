@@ -1,21 +1,28 @@
 package com.example.swipe;
 
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.graphics.Typeface;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TableRow;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 
 public class DetailActivity extends Abstract {
+
+    //ボタンにsetTagする用
+    Object tag = 0;
+
+    Context context;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,7 +40,21 @@ public class DetailActivity extends Abstract {
         current_day = year + "-" + month + day;
         String selected_category = getIntent().getStringExtra("SELECTEDCATEGORY");
         //db情報読取
-        readData(current_day,selected_category);
+        readData(current_day, selected_category);
+
+        //戻るボタンリスナー
+        Button back_button = (Button) findViewById(R.id.back_button);
+        back_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                Intent intent = new Intent(DetailActivity.this, AmountUsedList.class);
+                intent = setCurrentDay(intent, year, month, day);
+                startActivity(intent);
+
+            }
+        });
+
 
     }
 
@@ -110,7 +131,7 @@ public class DetailActivity extends Abstract {
 
                 ((Button) (w_table_row.getChildAt(j))).setText(w_results.get(i).get(j));
 
-               /* if (j == 0) {
+                if (j == 0) {
 
                     tag = w_results.get(i).get(j);
                     ((Button) (w_table_row.getChildAt(j))).setTag(tag);
@@ -118,14 +139,58 @@ public class DetailActivity extends Abstract {
                         @Override
                         public void onClick(View v) {
 
-                            tag = v.getTag();
+                            // アラート表示
+                            AlertDialog.Builder alertDialog = new AlertDialog.Builder(DetailActivity.this);
+
+
+                            // ダイアログの設定
+                            //削除
+                            alertDialog.setTitle("項目を…?");
+                            alertDialog.setMessage(" ");
+                            alertDialog.setPositiveButton("削除する", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    context = getApplication();
+                                    Toast.makeText(context, "削除するよん", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+
+                            //編集
+                            alertDialog.setNeutralButton("編集する", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    context = getApplication();
+                                    Toast.makeText(context, "消すよん", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+
+                            //追加
+                            alertDialog.setNegativeButton("追加する", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    Intent intent = new Intent(DetailActivity.this, AddActivity.class);
+                                    intent = setCurrentDay(intent, String.valueOf(year), String.valueOf(month), String.valueOf(day));
+                                    startActivity(intent);
+                                }
+                            }).show();
+
+
+
+
+
+
+
+
+
+                          /*  tag = v.getTag();
                             String selected_button = String.valueOf(tag);
                             Intent intent = new Intent(AmountUsedList.this,DetailActivity.class);
                             intent.putExtra("SELECTEDBUTTON",selected_button);
-                            startActivity(intent);
+                            startActivity(intent);*/
 
                         }
-                    });*/
+                    });
+                }
 
             }
 
