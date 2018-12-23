@@ -295,14 +295,6 @@ public class MainActivity extends Abstract {
             } else {
                 current_day.setBackgroundResource(R.drawable.text_layout);
             }
-/*
-            if (i == 25) {
-
-            } else if (i == 12) {
-                current_day.setBackgroundResource(R.drawable.red_siren);
-            }else {
-
-            }*/
 
 
             //ボタンに番号を持たせる

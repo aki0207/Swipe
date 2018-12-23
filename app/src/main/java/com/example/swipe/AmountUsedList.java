@@ -64,7 +64,7 @@ public class AmountUsedList extends Abstract {
             }
         });
 
-    /*    //追加画面へ
+        //追加画面へ
         Button go_add_button = (Button) findViewById(R.id.go_add_page);
         go_add_button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -76,7 +76,7 @@ public class AmountUsedList extends Abstract {
 
             }
         });
-*/
+
         //クリアボタン
         Button clear_button = (Button) findViewById(R.id.clear_button);
         clear_button.setOnClickListener(new View.OnClickListener() {

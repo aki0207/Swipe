@@ -15,6 +15,10 @@ import android.widget.Toast;
 
 public class EditActivity extends Abstract {
 
+    //更新元の情報を取得
+    String target_category_detail = "";
+    int target_price = 0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -29,6 +33,22 @@ public class EditActivity extends Abstract {
 
         //1ケタなら0埋めかます
         zeroPadding();
+
+        //更新元の情報を取得
+        String evacute =  getIntent().getStringExtra("TARGETVALUE");
+        int index = evacute.indexOf(",");
+        target_category_detail = evacute.substring(0,index);
+        target_price = Integer.parseInt(evacute.substring(index + 1,evacute.length()));
+
+        //EditTextに更新前の値をセットしておく
+        EditText category_detail_form = (EditText)findViewById(R.id.category_detail_form);
+        category_detail_form.setText(target_category_detail);
+        //カーソルをtextの一番後ろに
+        category_detail_form.setSelection(category_detail_form.getText().length());
+
+        EditText price_form = (EditText)findViewById(R.id.price_form);
+        price_form.setHint(String.valueOf(target_price));
+
 
         //Sqlで使う
         current_day = year + "-" + month + day;
@@ -61,55 +81,37 @@ public class EditActivity extends Abstract {
                 // 選択されているカテゴリを取得
                 String selected_category = (String) spinner.getSelectedItem();
                 //カテゴリー詳細
-                EditText category_detail = (EditText)findViewById(R.id.category_detail_form);
+                EditText category_detail = (EditText) findViewById(R.id.category_detail_form);
                 String entered_category_detail = category_detail.getText().toString();
                 //金額
                 EditText price_form = (EditText) findViewById(R.id.price_form);
                 String entered_price = price_form.getText().toString();
 
 
-                //更新する前に検索する
-                String sql = "select price from amount_used where date = ? and category = ?";
-                String[] array = {current_day, selected_category};
-                c = db.rawQuery(sql, array);
+                ContentValues values = new ContentValues();
+                values.put("category", selected_category);
+                values.put("price", entered_price);
+                values.put("category_detail",entered_category_detail);
 
+                db.beginTransaction();
+                db.update("amount_used", values, "category_detail = '" + target_category_detail +
+                        "' and price = " + target_price + " and date = '" + current_day + "'", null);
+                db.setTransactionSuccessful();
+                db.endTransaction();
+                Context context = getApplicationContext();
+                Toast.makeText(context, "更新が完了しました", Toast.LENGTH_SHORT).show();
 
-                //検索結果がなければ追加する
-                if (c.getCount() == 0) {
-                    insertData(db, current_day, selected_category, Integer.parseInt(entered_price),entered_category_detail);
-                    //結果があるなら対象を更新
-                } else {
-                    ContentValues values = new ContentValues();
-                    values.put("category", selected_category);
-                    values.put("price", entered_price);
-
-                    db.beginTransaction();
-                    db.update("amount_used", values, "category = '" + selected_category + "'", null);
-                    db.setTransactionSuccessful();
-                    db.endTransaction();
-                    Context context = getApplicationContext();
-                    Toast.makeText(context, "更新が完了しました", Toast.LENGTH_SHORT).show();
-
-                }
+                Intent intent = new Intent(EditActivity.this,DetailActivity.class);
+                intent = setCurrentDay(intent,year,month,day);
+                //秘技intent返し
+                intent.putExtra("SELECTEDCATEGORY",getIntent().getStringExtra("SELECTEDCATEGORY"));
+                startActivity(intent);
 
             }
         });
 
     }
 
-    //dbに値を登録する
-    private void insertData(SQLiteDatabase pDb, String pDate, String pCategory, int pPrice, String pCategoryDetail) {
-
-        ContentValues values = new ContentValues();
-        values.put("date", pDate);
-        values.put("category", pCategory);
-        values.put("price", pPrice);
-        values.put("category_detail",pCategoryDetail);
-
-        db.insert("amount_used", null, values);
-        Context context = getApplication();
-        Toast.makeText(context, "更新対象がなかったんでとりま新しく作りました", Toast.LENGTH_SHORT).show();
-    }
 
     //intentから値を取得
     public void getCurrentDay() {
@@ -118,7 +120,7 @@ public class EditActivity extends Abstract {
         day = getIntent().getStringExtra("DAY");
     }
 
-    public void zeroPadding () {
+    public void zeroPadding() {
 
         //1ケタなら0埋めかます
         if (month.length() == 1) {
