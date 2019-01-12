@@ -1,5 +1,6 @@
 package com.example.swipe;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -20,8 +21,8 @@ public class DetailActivity extends Abstract {
 
     //ボタンにsetTagする用
     Object tag = 0;
-
     Context context;
+    String selected_category = "";
 
 
     @Override
@@ -38,7 +39,7 @@ public class DetailActivity extends Abstract {
         month = zeroPadding(month);
         day = zeroPadding(day);
         current_day = year + "-" + month + day;
-        String selected_category = getIntent().getStringExtra("SELECTEDCATEGORY");
+        selected_category = getIntent().getStringExtra("SELECTEDCATEGORY");
         //db情報読取
         readData(current_day, selected_category);
 
@@ -129,15 +130,15 @@ public class DetailActivity extends Abstract {
 
             for (int j = 0; j < w_results.get(i).size(); j++) {
 
-                ((Button) (w_table_row.getChildAt(j))).setText(w_results.get(i).get(j));
-
                 if (j == 0) {
 
-                    tag = w_results.get(i).get(j);
+                    ((Button) (w_table_row.getChildAt(j))).setText(w_results.get(i).get(j));
+                    //ボタンにカテゴリ,金額を持たせておく
+                    tag = w_results.get(i).get(j) + "," + w_results.get(i).get(j + 1);
                     ((Button) (w_table_row.getChildAt(j))).setTag(tag);
                     ((Button) (w_table_row.getChildAt(j))).setOnClickListener(new View.OnClickListener() {
                         @Override
-                        public void onClick(View v) {
+                        public void onClick(final View v) {
 
                             // アラート表示
                             AlertDialog.Builder alertDialog = new AlertDialog.Builder(DetailActivity.this);
@@ -150,35 +151,39 @@ public class DetailActivity extends Abstract {
                             alertDialog.setPositiveButton("削除する", new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
+
+                                    //ボタンに持たせてた情報からsqlで削除実行
+                                    String delete_target = String.valueOf(v.getTag());
+                                    int index = delete_target.indexOf(",");
+                                    String categor_detail = delete_target.substring(0,index);
+                                    String price = delete_target.substring(index + 1,delete_target.length());
+                                    db.delete("amount_used", "category_detail='" + categor_detail +
+                                            "' and price = " + price + " and date = '" + current_day + "'" ,null);
+
                                     context = getApplication();
-                                    Toast.makeText(context, "削除するよん", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(context, "削除しました", Toast.LENGTH_SHORT).show();
+                                    Intent intent = new Intent(DetailActivity.this,DetailActivity.class);
+                                    intent = setCurrentDay(intent,year,month,day);
+                                    intent.putExtra("SELECTEDCATEGORY",selected_category);
+                                    startActivity(intent);
+
                                 }
                             });
 
-                            //編集
-                            alertDialog.setNeutralButton("編集する", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    context = getApplication();
-                                    Toast.makeText(context, "消すよん", Toast.LENGTH_SHORT).show();
-                                }
-                            });
+
 
                             //追加
-                            alertDialog.setNegativeButton("追加する", new DialogInterface.OnClickListener() {
+                            alertDialog.setNegativeButton("編集する", new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
-                                    Intent intent = new Intent(DetailActivity.this, AddActivity.class);
+                                    Intent intent = new Intent(DetailActivity.this, EditActivity.class);
                                     intent = setCurrentDay(intent, String.valueOf(year), String.valueOf(month), String.valueOf(day));
+                                    //ボタンに持たせてた情報を更新ページに渡す
+                                    intent.putExtra("TARGETVALUE",String.valueOf(v.getTag()));
+                                    intent.putExtra("SELECTEDCATEGORY",selected_category);
                                     startActivity(intent);
                                 }
                             }).show();
-
-
-
-
-
-
 
 
 
@@ -192,9 +197,25 @@ public class DetailActivity extends Abstract {
                     });
                 }
 
+                ((Button) (w_table_row.getChildAt(j))).setText(w_results.get(i).get(j));
+
             }
 
         }
+
+        Button go_add_page_button = (Button)findViewById(R.id.go_add_page);
+        go_add_page_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                Intent intent = new Intent(DetailActivity.this, AddActivity.class);
+                intent = setCurrentDay(intent, year, month, day);
+                startActivity(intent);
+
+            }
+        });
+
+
 
     }
 
