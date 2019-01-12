@@ -19,11 +19,7 @@ import java.util.ArrayList;
 
 public class AmountUsedList extends Abstract {
 
-    //日付
-    String year = "";
-    String month = "";
-    String day = "";
-    String current_day;
+
 
     //ボタンにsetTagする用
     Object tag = 0;

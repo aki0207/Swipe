@@ -1,13 +1,9 @@
+/*
 package com.example.swipe;
 
-import android.content.Context;
 import android.content.Intent;
 import android.database.sqlite.SQLiteException;
 import android.graphics.Color;
-import android.icu.util.Calendar;
-import android.os.Build;
-import android.os.Bundle;
-import android.support.annotation.RequiresApi;
 import android.support.v4.widget.DrawerLayout;
 import android.util.TypedValue;
 import android.view.GestureDetector;
@@ -20,16 +16,19 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-public class MainActivity extends Abstract {
+import java.util.Calendar;
+
+*/
+/**
+ * Created by ogasawara on 2019/01/12.
+ *//*
 
 
-    //スワイプ用
-    private static final int SWIPE_MIN_DISTANCE = 120;
-    private static final int SWIPE_MAX_OFF_PATH = 250;
-    private static final int SWIPE_THRESHOLD_VELOCITY = 200;
+public class CalendarLayout extends Abstract {
+
+
     private final int WC = ViewGroup.LayoutParams.WRAP_CONTENT;
     private final int MP = ViewGroup.LayoutParams.MATCH_PARENT;
-
     //日付け格納用
     int current_year = 0;
     int current_month = 0;
@@ -37,63 +36,10 @@ public class MainActivity extends Abstract {
     int evacuate_day = 0;
     //setTagで使う
     Object obj;
-    private GestureDetector mGestureDetector;
     MyDrawerLayout drawerLayout;
+    private GestureDetector mGestureDetector;
 
-    //スワイプ判定
-    private final GestureDetector.SimpleOnGestureListener mOnGestureListener = new GestureDetector.SimpleOnGestureListener() {
-        @Override
-        public boolean onFling(MotionEvent event1, MotionEvent event2, float velocityX, float velocityY) {
-
-            try {
-
-                if (Math.abs(event1.getY() - event2.getY()) > SWIPE_MAX_OFF_PATH) {
-                    // 縦の移動距離が大きすぎる場合は無視
-                    return false;
-                }
-
-                if (event1.getX() - event2.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
-
-                    Intent intent = new Intent(MainActivity.this, MainActivity.class);
-                    intent.putExtra("YEAR", current_year);
-                    intent.putExtra("MONTH", current_month + 1);
-
-                    startActivity(intent);
-                    overridePendingTransition(R.animator.activity_open_enter, R.animator.activity_open_exit);
-
-                } else if (event2.getX() - event1.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
-
-                    Intent intent = new Intent(MainActivity.this, MainActivity.class);
-                    intent.putExtra("YEAR", current_year);
-                    intent.putExtra("MONTH", current_month - 1);
-
-                    startActivity(intent);
-                    overridePendingTransition(R.animator.activity_close_enter, R.animator.activity_close_exit);
-                }
-
-            } catch (Exception e) {
-                // nothing
-            }
-            return false;
-        }
-    };
-
-
-
-    @RequiresApi(api = Build.VERSION_CODES.N)
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
-        mGestureDetector = new GestureDetector(this, mOnGestureListener);
-        makeLayout();
-
-
-
-
-
-
+    public void makeLayout() {
 
         //とりま日付回収
         current_year = getIntent().getIntExtra("YEAR", -999);
@@ -123,11 +69,13 @@ public class MainActivity extends Abstract {
         cal.set(Calendar.MONTH, current_month - 1);
         cal.set(Calendar.DATE, 1);
 
-       /* レイアウトを作成していく
+       */
+/* レイアウトを作成していく
           ヘッダー部分作成
-          サイドメニューを実装したいから頭はDrawerLayoutを使用*/
+          サイドメニューを実装したいから頭はDrawerLayoutを使用*//*
+
         drawerLayout = new MyDrawerLayout(this);
-        drawerLayout.setLayoutParams(new MyDrawerLayout.LayoutParams(MP,WC));
+        drawerLayout.setLayoutParams(new MyDrawerLayout.LayoutParams(MP, WC));
         setContentView(drawerLayout);
 
 
@@ -138,13 +86,11 @@ public class MainActivity extends Abstract {
 
         RelativeLayout headerRelativeLayout = new RelativeLayout(this);
         headerRelativeLayout.setBackgroundColor(Color.parseColor("#4169e1"));
-        headerLayout.addView(headerRelativeLayout,MP,WC);
+        headerLayout.addView(headerRelativeLayout, MP, WC);
 
         Button header_icon_button = new Button(this);
         header_icon_button.setBackgroundResource(R.drawable.side_menu);
-        headerRelativeLayout.addView(header_icon_button,120,WC);
-
-
+        headerRelativeLayout.addView(header_icon_button, 120, WC);
 
 
         //ヘッダーに表示する文字、背景色等を設定する
@@ -156,7 +102,7 @@ public class MainActivity extends Abstract {
         //親レイアウトの真ん中に配置する
         RelativeLayout.LayoutParams center_params = new RelativeLayout.LayoutParams(WC, WC);
         center_params.addRule(RelativeLayout.CENTER_IN_PARENT);
-        headerRelativeLayout.addView(textView,center_params);
+        headerRelativeLayout.addView(textView, center_params);
 
 
         String current_day_used_sql = String.valueOf(current_year) + "-" + String.valueOf(current_month);
@@ -323,8 +269,6 @@ public class MainActivity extends Abstract {
             }
 
 
-
-
             //ボタンに番号を持たせる
             obj = i;
             current_day.setTag(obj);
@@ -407,28 +351,9 @@ public class MainActivity extends Abstract {
         Button go_savings_amount_page_button = new Button(this);
         go_savings_amount_page_button.setText("貯金うぃる");
         go_savings_amount_page_button.setBackgroundColor(Color.GREEN);
-        sideMenuLayout.addView(go_savings_amount_page_button,new LinearLayout.LayoutParams(MP,WC));
+        sideMenuLayout.addView(go_savings_amount_page_button, new LinearLayout.LayoutParams(MP, WC));
 
-        //アイコンボタンリスナー
-        header_icon_button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // 左でオープン
-                Context context = getApplicationContext();
-                drawerLayout.openDrawer(Gravity.LEFT);
-            }
-        });
 
-        //サイドメニューボタンリスナー
-        go_savings_amount_page_button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this,SavingsAmountConfActivity.class);
-                startActivity(intent);
-            }
-        });
-
-    }
 
     //当月の総使用金額をTextViewにセットする
     public TextView calculateTotalAmount(TextView pTextVie, String pCurentDay) {
@@ -460,9 +385,11 @@ public class MainActivity extends Abstract {
             if (c != null) {
                 c.close();
             }
-         /*   if (db != null) {
+         */
+/*   if (db != null) {
                 db.close();
-            }*/
+            }*//*
+
 
         }
 
@@ -499,17 +426,6 @@ public class MainActivity extends Abstract {
         }
         return usage_amount_of_the_day;
     }
-
-    // これがないとGestureDetectorが動かない
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        return mGestureDetector.onTouchEvent(event);
-    }
-
-    public void makeLayout () {
-
-
-
-    }
 }
 
+*/
