@@ -2,9 +2,9 @@ package com.example.swipe;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteException;
 import android.graphics.Color;
-import android.icu.util.Calendar;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.RequiresApi;
@@ -20,8 +20,9 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-public class MainActivity extends Abstract {
+import java.util.Calendar;
 
+public class MainActivity extends Abstract implements View.OnClickListener {
 
     //スワイプ用
     private static final int SWIPE_MIN_DISTANCE = 120;
@@ -37,46 +38,9 @@ public class MainActivity extends Abstract {
     int evacuate_day = 0;
     //setTagで使う
     Object obj;
-    private GestureDetector mGestureDetector;
     MyDrawerLayout drawerLayout;
-
-    //スワイプ判定
-    private final GestureDetector.SimpleOnGestureListener mOnGestureListener = new GestureDetector.SimpleOnGestureListener() {
-        @Override
-        public boolean onFling(MotionEvent event1, MotionEvent event2, float velocityX, float velocityY) {
-
-            try {
-
-                if (Math.abs(event1.getY() - event2.getY()) > SWIPE_MAX_OFF_PATH) {
-                    // 縦の移動距離が大きすぎる場合は無視
-                    return false;
-                }
-
-                if (event1.getX() - event2.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
-
-                    Intent intent = new Intent(MainActivity.this, MainActivity.class);
-                    intent.putExtra("YEAR", current_year);
-                    intent.putExtra("MONTH", current_month + 1);
-
-                    startActivity(intent);
-                    overridePendingTransition(R.animator.activity_open_enter, R.animator.activity_open_exit);
-
-                } else if (event2.getX() - event1.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
-
-                    Intent intent = new Intent(MainActivity.this, MainActivity.class);
-                    intent.putExtra("YEAR", current_year);
-                    intent.putExtra("MONTH", current_month - 1);
-
-                    startActivity(intent);
-                    overridePendingTransition(R.animator.activity_close_enter, R.animator.activity_close_exit);
-                }
-
-            } catch (Exception e) {
-                // nothing
-            }
-            return false;
-        }
-    };
+    Calendar cal;
+    private GestureDetector mGestureDetector;
 
 
 
@@ -86,19 +50,21 @@ public class MainActivity extends Abstract {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        //スワイプ処理のリスナー
         mGestureDetector = new GestureDetector(this, mOnGestureListener);
+        //年、月取得
+        getCurrentYearAndMonth();
+        //表示するレイアウト作成
         makeLayout();
 
+    }
 
+    //とりま日付回収
+    public void getCurrentYearAndMonth () {
 
-
-
-
-
-        //とりま日付回収
         current_year = getIntent().getIntExtra("YEAR", -999);
         current_month = getIntent().getIntExtra("MONTH", -999);
-        Calendar cal = Calendar.getInstance();
+        cal = Calendar.getInstance();
 
         //起動後、ページ移動していない状態(intentに値があるかで判断)なら当月を取得
         if (current_year == -999 || current_month == -999) {
@@ -123,12 +89,250 @@ public class MainActivity extends Abstract {
         cal.set(Calendar.MONTH, current_month - 1);
         cal.set(Calendar.DATE, 1);
 
-       /* レイアウトを作成していく
-          ヘッダー部分作成
+    }
+
+    @Override
+    public void onClick(View v) {
+
+        //どのボタンが押されたか、Tagで判断
+        String button_tag = String.valueOf(v.getTag());
+
+        //サイドメニュー内のボタン
+        if (button_tag.equals("go")) {
+            Intent intent = new Intent(MainActivity.this, SavingsAmountConfActivity.class);
+            startActivity(intent);
+        } else if (button_tag.equals("icon")) {
+            Context context = getApplicationContext();
+            drawerLayout.openDrawer(Gravity.LEFT);
+            //日付ボタン
+        } else {
+
+            v.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    //これでボタン上でもスワイプが可能
+                    return mGestureDetector.onTouchEvent(event);
+                }
+            });
+
+            //ボタンに持たせた番号を取得
+            String evacuate_string = String.valueOf(v.getTag());
+            int chosen_button_num = Integer.parseInt(evacuate_string);
+
+            Intent intent = new Intent(MainActivity.this, AmountUsedList.class);
+            intent.putExtra("YEAR", String.valueOf(current_year));
+            intent.putExtra("MONTH", String.valueOf(current_month));
+            intent.putExtra("DAY", String.valueOf(chosen_button_num));
+            startActivity(intent);
+
+        }
+
+
+    }
+
+
+    //当月の総使用金額をTextViewにセットする
+    public TextView calculateTotalAmount(TextView pTextVie, String pCurentDay) {
+
+        try {
+
+
+            if (helper == null) {
+                helper = new DbOpenHelper(this);
+            }
+            if (db == null) {
+                db = helper.getReadableDatabase();
+            }
+
+            //総額
+            String sql = "select sum(price) from amount_used where date like '%' || ? || '%' ESCAPE '$'";
+            c = db.rawQuery(sql, new String[]{pCurentDay});
+            boolean isEof = c.moveToFirst();
+            while (isEof) {
+
+                pTextVie.setText(String.format("%d", c.getInt(0)) + "円");
+                pTextVie.setTextSize(24);
+                isEof = c.moveToNext();
+            }
+
+        } catch (SQLiteException e) {
+            e.printStackTrace();
+        } finally {
+            if (c != null) {
+                c.close();
+            }
+         /*   if (db != null) {
+                db.close();
+            }*/
+
+        }
+
+        return pTextVie;
+
+    }
+
+    //当日の使用金額を返す
+    public int usageAmountOfTheDay(String pDay) {
+
+        int usage_amount_of_the_day = 0;
+        pDay = zeroPadding(pDay);
+        String current_day_used_sql = current_year + "-" + current_month + pDay;
+
+        if (helper == null) {
+            helper = new DbOpenHelper(this);
+        }
+        if (db == null) {
+            db = helper.getReadableDatabase();
+        }
+
+
+        String sql = "select sum(price) from amount_used where date = ?";
+        c = db.rawQuery(sql, new String[]{current_day_used_sql});
+        boolean isEof = c.moveToFirst();
+
+        if (c.getCount() == 1) {
+            while (isEof) {
+
+                usage_amount_of_the_day = c.getInt(0);
+                isEof = c.moveToNext();
+
+            }
+        }
+        return usage_amount_of_the_day;
+    }
+
+    //目標貯金額達成まで1日あたりいくら使えるか算出
+    public int availableAmount (String pTartgetAmount, String pStartDay, String pEndDay) {
+
+     /*   try {
+
+
+*/
+
+     int ret = 0;
+            //今日が何日か取得
+            cal = Calendar.getInstance();
+
+            //終了日
+            String end_month = pEndDay.substring(0,2);
+            String end_day = pEndDay.substring(2,4);
+
+            //0埋め解除
+            if(end_month.substring(0,1).equals("0")) {
+                end_month = end_month.substring(1,2);
+            }
+
+            if (end_day.substring(0,1).equals("0")) {
+                end_day = end_day.substring(1,2);
+            }
+
+            int after_conversion_month = Integer.parseInt(end_month);
+            int after_conversion_day = Integer.parseInt(end_day);
+            //ようやく最終日の値を持ったcalendarインスタンスが完成する
+            Calendar target_end_day = Calendar.getInstance();
+            target_end_day.set(Calendar.MONTH,after_conversion_month - 1);
+            target_end_day.set(Calendar.DATE,after_conversion_day);
+
+        //とりあえず日数の差分は出せた
+            int days = getDiffDays(target_end_day,cal);
+
+        //開始日から現在までの使用金額出す
+
+        if (helper == null) {
+            helper = new DbOpenHelper(this);
+        }
+        if (db == null) {
+            db = helper.getReadableDatabase();
+        }
+
+        int current_year = cal.get(cal.YEAR);
+        int current_month = cal.get(cal.MONTH);
+        int current_day = cal.get(cal.DATE);
+
+        //sql用に今日の日付を整形
+        String before_shaping_current_year = zeroPadding(String.valueOf(current_year));
+        String before_shaping_current_month = zeroPadding(String.valueOf(current_month));
+        String before_shaping_current_day = zeroPadding(String.valueOf(current_day));
+        //yyyy-mmdd
+        String use_sql_current_day = before_shaping_current_year + "-" + before_shaping_current_month + before_shaping_current_day;
+        pEndDay = before_shaping_current_year + "-" + pEndDay;
+
+        String sql = "select sum(price) from amount_used where date between ? and ?";
+        c = db.rawQuery(sql, new String[]{use_sql_current_day,pEndDay});
+        boolean isEof = c.moveToFirst();
+        while (isEof) {
+
+            ret = c.getInt(0);
+            isEof = c.moveToNext();
+        }
+
+
+        return ret;
+
+/*
+            //総額
+            String sql = "select sum(price) from amount_used where date like '%' || ? || '%' ESCAPE '$'";
+            c = db.rawQuery(sql, new String[]{pCurentDay});
+            boolean isEof = c.moveToFirst();
+            while (isEof) {
+
+                pTextVie.setText(String.format("%d", c.getInt(0)) + "円");
+                pTextVie.setTextSize(24);
+                isEof = c.moveToNext();
+            }
+
+        } catch (SQLiteException e) {
+            e.printStackTrace();
+        } finally {
+            if (c != null) {
+                c.close();
+            }
+         *//*   if (db != null) {
+                db.close();
+            }*//*
+
+        }*/
+
+
+    }
+
+    public int getDiffDays(Calendar calendar1, Calendar calendar2) {
+        //==== ミリ秒単位での差分算出 ====//
+        long diffTime = calendar1.getTimeInMillis() - calendar2.getTimeInMillis();
+
+        //==== 日単位に変換 ====//
+        int MILLIS_OF_DAY = 1000 * 60 * 60 * 24;
+        int diffDays = (int)(diffTime / MILLIS_OF_DAY);
+
+        return diffDays;
+    }
+
+    // これがないとGestureDetectorが動かない
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        return mGestureDetector.onTouchEvent(event);
+    }
+
+    //レイアウト部分
+    public void makeLayout() {
+
+          /* ヘッダー部分作成
           サイドメニューを実装したいから頭はDrawerLayoutを使用*/
         drawerLayout = new MyDrawerLayout(this);
-        drawerLayout.setLayoutParams(new MyDrawerLayout.LayoutParams(MP,WC));
+        drawerLayout.setLayoutParams(new MyDrawerLayout.LayoutParams(MP, WC));
         setContentView(drawerLayout);
+
+
+        drawerLayout.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                //これでボタン上でもスワイプが可能
+                return mGestureDetector.onTouchEvent(event);
+            }
+        });
+
+        //画面スワイプとの兼ね合いでスワイプでサイドメニューを出す処理を禁じる
+        drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
 
 
         LinearLayout headerLayout = new LinearLayout(this);
@@ -138,13 +342,13 @@ public class MainActivity extends Abstract {
 
         RelativeLayout headerRelativeLayout = new RelativeLayout(this);
         headerRelativeLayout.setBackgroundColor(Color.parseColor("#4169e1"));
-        headerLayout.addView(headerRelativeLayout,MP,WC);
+        headerLayout.addView(headerRelativeLayout, MP, WC);
 
         Button header_icon_button = new Button(this);
         header_icon_button.setBackgroundResource(R.drawable.side_menu);
-        headerRelativeLayout.addView(header_icon_button,120,WC);
-
-
+        header_icon_button.setTag("icon");
+        header_icon_button.setOnClickListener(this);
+        headerRelativeLayout.addView(header_icon_button, 120, WC);
 
 
         //ヘッダーに表示する文字、背景色等を設定する
@@ -156,10 +360,29 @@ public class MainActivity extends Abstract {
         //親レイアウトの真ん中に配置する
         RelativeLayout.LayoutParams center_params = new RelativeLayout.LayoutParams(WC, WC);
         center_params.addRule(RelativeLayout.CENTER_IN_PARENT);
-        headerRelativeLayout.addView(textView,center_params);
+        headerRelativeLayout.addView(textView, center_params);
+
+
+        //貯金チャレンジ中ならヘッダー部右にアイコン表示
+        SharedPreferences data = getSharedPreferences("DataSave", Context.MODE_PRIVATE);
+        boolean savings_amount_flg = data.getBoolean("flg",false);
+
+        if (savings_amount_flg) {
+
+            Button light_bulb_icon = new Button(this);
+            light_bulb_icon.setBackgroundResource(R.drawable.light_bulb);
+            //画面右上(親レイアウト右)に配置する
+            RelativeLayout.LayoutParams right_parms = new RelativeLayout.LayoutParams(WC, WC);
+            right_parms.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+            headerRelativeLayout.addView(light_bulb_icon,right_parms);
+
+        }
 
 
         String current_day_used_sql = String.valueOf(current_year) + "-" + String.valueOf(current_month);
+
+
+
         RelativeLayout relativeLayout = new RelativeLayout(this);
         headerLayout.addView(relativeLayout);
         //こいつで画面上部のええ感じのとこに配置する
@@ -167,7 +390,6 @@ public class MainActivity extends Abstract {
         top_center_params.addRule(RelativeLayout.ALIGN_PARENT_TOP);
         top_center_params.addRule(RelativeLayout.CENTER_HORIZONTAL);
         top_center_params.setMargins(0, 60, 0, 0);
-
 
         //文言
         TextView the_amount_text = new TextView(this);
@@ -178,19 +400,59 @@ public class MainActivity extends Abstract {
         relativeLayout.addView(the_amount_text, top_center_params);
 
 
+        //金額
         LinearLayout amountLayout = new LinearLayout(this);
         LinearLayout.LayoutParams amountParams = new LinearLayout.LayoutParams(MP, WC);
         amountParams.setMargins(0, 30, 0, 0);
         amountLayout.setLayoutParams(amountParams);
         headerLayout.addView(amountLayout);
 
-        //金額
         TextView the_amount = new TextView(this);
         the_amount.setText("0円");
         //当月の総使用額を取得
         the_amount = calculateTotalAmount(the_amount, current_day_used_sql);
         the_amount.setGravity(Gravity.CENTER);
         amountLayout.addView(the_amount, MP, WC);
+
+
+
+
+        //貯金チャレンジ中に表示される文言
+        RelativeLayout secondRelativeLayout = new RelativeLayout(this);
+        headerLayout.addView(secondRelativeLayout);
+
+        TextView available_amount_text = new TextView(this);
+        available_amount_text.setText("1日辺り使える金額");
+        available_amount_text.setId(View.generateViewId());
+        available_amount_text.setBackgroundResource(R.drawable.under_line);
+        available_amount_text.setTextSize(24);
+        secondRelativeLayout.addView(available_amount_text, top_center_params);
+
+
+
+        //金額
+        LinearLayout availableAmountLayout = new LinearLayout(this);
+        availableAmountLayout.setLayoutParams(amountParams);
+        headerLayout.addView(availableAmountLayout);
+
+        TextView available_amount = new TextView(this);
+
+        available_amount.setText("0円");
+
+
+        //設定ファイルの値取得
+        String savings_amount = data.getString("savingsAmount","");
+        String start_day = data.getString("startDay","");
+        String end_day = data.getString("endDay","");
+
+        //目標貯金額÷日数で1日あたりの使用可能金額を算出
+        //availableAmountの戻り値をsetTextするとレイアウトばぐってわろた。原因不明
+        //available_amount.setText(String.valueOf(availableAmount(savings_amount,start_day,end_day)));
+        available_amount.setGravity(Gravity.CENTER);
+        availableAmountLayout.addView(available_amount, MP, WC);
+
+
+
 
 
         //カレンダー部分を作成していく
@@ -200,9 +462,11 @@ public class MainActivity extends Abstract {
         headerLayout.addView(base_layout);
 
 
+
+
         //レイアウトのマージン(高さ)を設定する
         LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) base_layout.getLayoutParams();
-        params.setMargins(0, 350, 0, 0);
+        params.setMargins(0, 290, 0, 0);
         base_layout.setLayoutParams(params);
         //base_layout.setLayoutParams(params);
 
@@ -303,7 +567,6 @@ public class MainActivity extends Abstract {
 
         for (int i = 1; i <= max_day; i++) {
 
-
             cal.set(Calendar.DATE, i);
             //ohter_day = new TextView(this);
             current_day = new Button(this);
@@ -322,46 +585,17 @@ public class MainActivity extends Abstract {
                 current_day.setBackgroundResource(R.drawable.text_layout);
             }
 
-
-
-
-            //ボタンに番号を持たせる
-            obj = i;
-            current_day.setTag(obj);
-
+            //土日にはそれぞれ文字に色をつける
             if (Calendar.SATURDAY == cal.get(Calendar.DAY_OF_WEEK)) {
                 current_day.setTextColor(Color.parseColor("#00bfff"));
             } else if (Calendar.SUNDAY == cal.get(Calendar.DAY_OF_WEEK)) {
                 current_day.setTextColor(Color.parseColor("#ff0000"));
             }
 
-
-            //ここでリスナー設定しとくことで全ボタンに設定できる気がする
-            current_day.setOnTouchListener(new View.OnTouchListener() {
-                @Override
-                public boolean onTouch(View v, MotionEvent event) {
-                    //これでボタン上でもスワイプが可能
-                    return mGestureDetector.onTouchEvent(event);
-                }
-            });
-
-            current_day.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-
-                    //ボタンに持たせた番号を取得
-                    String evacuate_string = String.valueOf(v.getTag());
-                    int chosen_button_num = Integer.parseInt(evacuate_string);
-
-                    Intent intent = new Intent(MainActivity.this, AmountUsedList.class);
-                    intent.putExtra("YEAR", String.valueOf(current_year));
-                    intent.putExtra("MONTH", String.valueOf(current_month));
-                    intent.putExtra("DAY", String.valueOf(chosen_button_num));
-                    startActivity(intent);
-
-                }
-            });
-
+            //ボタンに識別子を持たせる
+            obj = i;
+            current_day.setTag(obj);
+            current_day.setOnClickListener(this);
 
             linearLayout.addView(current_day, param1);
 
@@ -379,7 +613,7 @@ public class MainActivity extends Abstract {
         }
 
         //当月の最終日が土曜日じゃない時、土曜日まで次の月の日付で埋める
-        if (cal.get(Calendar.DAY_OF_WEEK) != 7) {
+        if (cal.get(Calendar.DAY_OF_WEEK) != Calendar.SATURDAY) {
 
             int i = 1;
             for (int count = cal.get(Calendar.DAY_OF_WEEK); count < 7; count++) {
@@ -403,113 +637,54 @@ public class MainActivity extends Abstract {
         lp.gravity = Gravity.LEFT;
         sideMenuLayout.setLayoutParams(lp);
         drawerLayout.addView(sideMenuLayout);
+
+
         //サイドメニュー内のView
         Button go_savings_amount_page_button = new Button(this);
         go_savings_amount_page_button.setText("貯金うぃる");
         go_savings_amount_page_button.setBackgroundColor(Color.GREEN);
-        sideMenuLayout.addView(go_savings_amount_page_button,new LinearLayout.LayoutParams(MP,WC));
-
-        //アイコンボタンリスナー
-        header_icon_button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // 左でオープン
-                Context context = getApplicationContext();
-                drawerLayout.openDrawer(Gravity.LEFT);
-            }
-        });
-
-        //サイドメニューボタンリスナー
-        go_savings_amount_page_button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this,SavingsAmountConfActivity.class);
-                startActivity(intent);
-            }
-        });
+        sideMenuLayout.addView(go_savings_amount_page_button, new LinearLayout.LayoutParams(MP, WC));
+        go_savings_amount_page_button.setTag("go");
+        go_savings_amount_page_button.setOnClickListener(this);
 
     }
 
-    //当月の総使用金額をTextViewにセットする
-    public TextView calculateTotalAmount(TextView pTextVie, String pCurentDay) {
+    //スワイプ判定
+    private final GestureDetector.SimpleOnGestureListener mOnGestureListener = new GestureDetector.SimpleOnGestureListener() {
+        @Override
+        public boolean onFling(MotionEvent event1, MotionEvent event2, float velocityX, float velocityY) {
 
-        try {
+            try {
 
-            //金額取得
-            if (helper == null) {
-                helper = new DbOpenHelper(this);
+                if (Math.abs(event1.getY() - event2.getY()) > SWIPE_MAX_OFF_PATH) {
+                    // 縦の移動距離が大きすぎる場合は無視
+                    return false;
+                }
+
+                if (event1.getX() - event2.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
+
+                    Intent intent = new Intent(MainActivity.this, MainActivity.class);
+                    intent.putExtra("YEAR", current_year);
+                    intent.putExtra("MONTH", current_month + 1);
+
+                    startActivity(intent);
+                    overridePendingTransition(R.animator.activity_open_enter, R.animator.activity_open_exit);
+
+                } else if (event2.getX() - event1.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
+
+                    Intent intent = new Intent(MainActivity.this, MainActivity.class);
+                    intent.putExtra("YEAR", current_year);
+                    intent.putExtra("MONTH", current_month - 1);
+
+                    startActivity(intent);
+                    overridePendingTransition(R.animator.activity_close_enter, R.animator.activity_close_exit);
+                }
+
+            } catch (Exception e) {
+                // nothing
             }
-            if (db == null) {
-                db = helper.getReadableDatabase();
-            }
-
-            //総額
-            String sql = "select sum(price) from amount_used where date like '%' || ? || '%' ESCAPE '$'";
-            c = db.rawQuery(sql, new String[]{pCurentDay});
-            boolean isEof = c.moveToFirst();
-            while (isEof) {
-
-                pTextVie.setText(String.format("%d", c.getInt(0)) + "円");
-                pTextVie.setTextSize(24);
-                isEof = c.moveToNext();
-            }
-
-        } catch (SQLiteException e) {
-            e.printStackTrace();
-        } finally {
-            if (c != null) {
-                c.close();
-            }
-         /*   if (db != null) {
-                db.close();
-            }*/
-
+            return false;
         }
-
-        return pTextVie;
-
-    }
-
-    //当日の使用金額を返す
-    public int usageAmountOfTheDay(String pDay) {
-
-        int usage_amount_of_the_day = 0;
-        pDay = zeroPadding(pDay);
-        String current_day_used_sql = current_year + "-" + current_month + pDay;
-
-        if (helper == null) {
-            helper = new DbOpenHelper(this);
-        }
-        if (db == null) {
-            db = helper.getReadableDatabase();
-        }
-
-
-        String sql = "select sum(price) from amount_used where date = ?";
-        c = db.rawQuery(sql, new String[]{current_day_used_sql});
-        boolean isEof = c.moveToFirst();
-
-        if (c.getCount() == 1) {
-            while (isEof) {
-
-                usage_amount_of_the_day = c.getInt(0);
-                isEof = c.moveToNext();
-
-            }
-        }
-        return usage_amount_of_the_day;
-    }
-
-    // これがないとGestureDetectorが動かない
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        return mGestureDetector.onTouchEvent(event);
-    }
-
-    public void makeLayout () {
-
-
-
-    }
+    };
 }
 

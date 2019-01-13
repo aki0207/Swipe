@@ -1,6 +1,5 @@
 package com.example.swipe;
 
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -203,7 +202,7 @@ public class DetailActivity extends Abstract {
 
         }
 
-        Button go_add_page_button = (Button)findViewById(R.id.go_add_page);
+    /*    Button go_add_page_button = (Button)findViewById(R.id.go_add_page);
         go_add_page_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -213,7 +212,7 @@ public class DetailActivity extends Abstract {
                 startActivity(intent);
 
             }
-        });
+        });*/
 
 
 

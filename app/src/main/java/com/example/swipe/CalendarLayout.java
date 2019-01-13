@@ -37,7 +37,7 @@ public class CalendarLayout extends Abstract {
     //setTagで使う
     Object obj;
     MyDrawerLayout drawerLayout;
-    private GestureDetector mGestureDetector;
+
 
     public void makeLayout() {
 
@@ -280,31 +280,7 @@ public class CalendarLayout extends Abstract {
             }
 
 
-            //ここでリスナー設定しとくことで全ボタンに設定できる気がする
-            current_day.setOnTouchListener(new View.OnTouchListener() {
-                @Override
-                public boolean onTouch(View v, MotionEvent event) {
-                    //これでボタン上でもスワイプが可能
-                    return mGestureDetector.onTouchEvent(event);
-                }
-            });
 
-            current_day.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-
-                    //ボタンに持たせた番号を取得
-                    String evacuate_string = String.valueOf(v.getTag());
-                    int chosen_button_num = Integer.parseInt(evacuate_string);
-
-                    Intent intent = new Intent(MainActivity.this, AmountUsedList.class);
-                    intent.putExtra("YEAR", String.valueOf(current_year));
-                    intent.putExtra("MONTH", String.valueOf(current_month));
-                    intent.putExtra("DAY", String.valueOf(chosen_button_num));
-                    startActivity(intent);
-
-                }
-            });
 
 
             linearLayout.addView(current_day, param1);
@@ -323,7 +299,7 @@ public class CalendarLayout extends Abstract {
         }
 
         //当月の最終日が土曜日じゃない時、土曜日まで次の月の日付で埋める
-        if (cal.get(Calendar.DAY_OF_WEEK) != 7) {
+        if (cal.get(Calendar.DAY_OF_WEEK) != Calendar.SATURDAY) {
 
             int i = 1;
             for (int count = cal.get(Calendar.DAY_OF_WEEK); count < 7; count++) {
@@ -354,8 +330,8 @@ public class CalendarLayout extends Abstract {
         sideMenuLayout.addView(go_savings_amount_page_button, new LinearLayout.LayoutParams(MP, WC));
 
 
+        //当月の総使用金額をTextViewにセットする
 
-    //当月の総使用金額をTextViewにセットする
     public TextView calculateTotalAmount(TextView pTextVie, String pCurentDay) {
 
         try {

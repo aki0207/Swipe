@@ -66,8 +66,7 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentRight="true"
                 android:layout_alignParentTop="true"
-                android:text="追加へ"
-                android:visibility="invisible"/>
+                android:text="追加へ" />
 
         </RelativeLayout>
 

@@ -184,9 +184,16 @@ public class SavingsAmountConfActivity extends Abstract {
                 String testStartDay = data.getString("startDay","" );
                 String testEndDay = data.getString("endDay","");
                 String testAmount = data.getString("savingsAmount","");
+                boolean flg = data.getBoolean("flg",false);
+                String flg_result;
+                if (flg) {
+                    flg_result = "true";
+                } else {
+                    flg_result = "false";
+                }
 
                 Context context = getApplicationContext();
-                Toast.makeText(context , testStartDay + testEndDay + testAmount, Toast.LENGTH_LONG).show();
+                Toast.makeText(context , testStartDay + testEndDay + testAmount+ flg_result, Toast.LENGTH_LONG).show();
 
 
             }
@@ -197,13 +204,26 @@ public class SavingsAmountConfActivity extends Abstract {
         ok_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //開始日
-                String start_day = (String) start_month_spinner.getSelectedItem() +
-                        (String) start_day_spinner.getSelectedItem();
 
+                /*String start_day = (String) start_month_spinner.getSelectedItem() +
+                        (String) start_day_spinner.getSelectedItem();*/
+                //開始月
+                String start_month = (String) start_month_spinner.getSelectedItem();
+                //開始日
+                String start_day = (String) start_day_spinner.getSelectedItem();
+                //終了月
+                String end_month = (String) end_month_spinner.getSelectedItem();
                 //終了日
-                String end_day = (String) end_month_spinner.getSelectedItem() +
-                        (String)end_day_spinner.getSelectedItem();
+                String end_day = (String)end_day_spinner.getSelectedItem();
+
+                //0埋め
+                start_month = zeroPadding(start_month);
+                start_day = zeroPadding(start_day);
+                end_month = zeroPadding(end_month);
+                end_day = zeroPadding(end_day);
+
+
+
 
                 //目標貯金額
                 EditText amount = (EditText)findViewById(R.id.amount);
@@ -213,9 +233,11 @@ public class SavingsAmountConfActivity extends Abstract {
                 SharedPreferences prefs = getSharedPreferences("DataSave", Context.MODE_PRIVATE);
                 SharedPreferences.Editor editor = prefs.edit();
 
+
+
                 editor.putBoolean("flg",true);
-                editor.putString("startDay", start_day);
-                editor.putString("endDay", end_day);
+                editor.putString("startDay", start_month + start_day);
+                editor.putString("endDay", end_month + end_day);
                 editor.putString("savingsAmount",savings_amount);
                 editor.apply();
 
