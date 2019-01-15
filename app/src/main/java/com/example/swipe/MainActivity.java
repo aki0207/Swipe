@@ -175,8 +175,9 @@ public class MainActivity extends Abstract implements View.OnClickListener {
     public int usageAmountOfTheDay(String pDay) {
 
         int usage_amount_of_the_day = 0;
+        String zero_padding_shaping_current_month = zeroPadding(String.valueOf(current_month));
         pDay = zeroPadding(pDay);
-        String current_day_used_sql = current_year + "-" + current_month + pDay;
+        String current_day_used_sql = current_year + "-" + zero_padding_shaping_current_month + pDay;
 
         if (helper == null) {
             helper = new DbOpenHelper(this);
@@ -201,98 +202,47 @@ public class MainActivity extends Abstract implements View.OnClickListener {
         return usage_amount_of_the_day;
     }
 
-    //目標貯金額達成まで1日あたりいくら使えるか算出
-    public int availableAmount (String pTartgetAmount, String pStartDay, String pEndDay) {
+    //(貯金目標額－今日までの使用金額)÷残り日数で1日あたりの使用可能金額を返す
+    public int availableAmount (int pTartgetAmount, int pDaysLeft, int pUsageAmount) {
 
-     /*   try {
-
-
-*/
-
-     int ret = 0;
-            //今日が何日か取得
-            cal = Calendar.getInstance();
-
-            //終了日
-            String end_month = pEndDay.substring(0,2);
-            String end_day = pEndDay.substring(2,4);
-
-            //0埋め解除
-            if(end_month.substring(0,1).equals("0")) {
-                end_month = end_month.substring(1,2);
-            }
-
-            if (end_day.substring(0,1).equals("0")) {
-                end_day = end_day.substring(1,2);
-            }
-
-            int after_conversion_month = Integer.parseInt(end_month);
-            int after_conversion_day = Integer.parseInt(end_day);
-            //ようやく最終日の値を持ったcalendarインスタンスが完成する
-            Calendar target_end_day = Calendar.getInstance();
-            target_end_day.set(Calendar.MONTH,after_conversion_month - 1);
-            target_end_day.set(Calendar.DATE,after_conversion_day);
-
-        //とりあえず日数の差分は出せた
-            int days = getDiffDays(target_end_day,cal);
-
-        //開始日から現在までの使用金額出す
-
-        if (helper == null) {
-            helper = new DbOpenHelper(this);
-        }
-        if (db == null) {
-            db = helper.getReadableDatabase();
-        }
-
-        int current_year = cal.get(cal.YEAR);
-        int current_month = cal.get(cal.MONTH);
-        int current_day = cal.get(cal.DATE);
-
-        //sql用に今日の日付を整形
-        String before_shaping_current_year = zeroPadding(String.valueOf(current_year));
-        String before_shaping_current_month = zeroPadding(String.valueOf(current_month));
-        String before_shaping_current_day = zeroPadding(String.valueOf(current_day));
-        //yyyy-mmdd
-        String use_sql_current_day = before_shaping_current_year + "-" + before_shaping_current_month + before_shaping_current_day;
-        pEndDay = before_shaping_current_year + "-" + pEndDay;
-
-        String sql = "select sum(price) from amount_used where date between ? and ?";
-        c = db.rawQuery(sql, new String[]{use_sql_current_day,pEndDay});
-        boolean isEof = c.moveToFirst();
-        while (isEof) {
-
-            ret = c.getInt(0);
-            isEof = c.moveToNext();
-        }
-
-
+        int ret;
+        ret = (pTartgetAmount - pUsageAmount) / pDaysLeft;
         return ret;
 
-/*
-            //総額
-            String sql = "select sum(price) from amount_used where date like '%' || ? || '%' ESCAPE '$'";
-            c = db.rawQuery(sql, new String[]{pCurentDay});
-            boolean isEof = c.moveToFirst();
-            while (isEof) {
+    }
 
-                pTextVie.setText(String.format("%d", c.getInt(0)) + "円");
-                pTextVie.setTextSize(24);
-                isEof = c.moveToNext();
-            }
+    //終了日までの残り日数を返す
+    public int daysLeftCalculation (String pEndDay) {
 
-        } catch (SQLiteException e) {
-            e.printStackTrace();
-        } finally {
-            if (c != null) {
-                c.close();
-            }
-         *//*   if (db != null) {
-                db.close();
-            }*//*
 
-        }*/
+        //今日が何日か取得
+        cal = Calendar.getInstance();
 
+        //終了日
+        String end_month = pEndDay.substring(0,2);
+        String end_day = pEndDay.substring(2,4);
+
+        //0埋め解除
+        if(end_month.substring(0,1).equals("0")) {
+            end_month = end_month.substring(1,2);
+        }
+
+        if (end_day.substring(0,1).equals("0")) {
+            end_day = end_day.substring(1,2);
+        }
+
+        int after_conversion_month = Integer.parseInt(end_month);
+        int after_conversion_day = Integer.parseInt(end_day);
+        //ようやく最終日の値を持ったcalendarインスタンスが完成する
+        Calendar target_end_day = Calendar.getInstance();
+        target_end_day.set(Calendar.MONTH,after_conversion_month - 1);
+        target_end_day.set(Calendar.DATE,after_conversion_day);
+
+        //現在から終了日までの日数
+        int days = getDiffDays(target_end_day,cal);
+
+        //当日を含めたい
+        return days + 1;
 
     }
 
@@ -305,6 +255,52 @@ public class MainActivity extends Abstract implements View.OnClickListener {
         int diffDays = (int)(diffTime / MILLIS_OF_DAY);
 
         return diffDays;
+    }
+
+    //開始日から現在までの使用金額を返す
+    public int curentUsageAmount(String pStartDay) {
+
+        /*   try {
+
+
+         */
+
+        int ret = 0;
+
+
+
+
+        if (helper == null) {
+            helper = new DbOpenHelper(this);
+        }
+        if (db == null) {
+            db = helper.getReadableDatabase();
+        }
+
+        int current_year = cal.get(cal.YEAR);
+        int current_month = cal.get(cal.MONTH) + 1;
+        int current_day = cal.get(cal.DATE);
+
+        //sql用に今日の日付を整形
+        String before_shaping_current_year = zeroPadding(String.valueOf(current_year));
+        String before_shaping_current_month = zeroPadding(String.valueOf(current_month));
+        String before_shaping_current_day = zeroPadding(String.valueOf(current_day));
+        //yyyy-mmdd
+        String use_sql_current_day = before_shaping_current_year + "-" + before_shaping_current_month + before_shaping_current_day;
+        pStartDay = before_shaping_current_year + "-" + pStartDay;
+
+        String sql = "select sum(price) from amount_used where date between ? and ?";
+        c = db.rawQuery(sql, new String[]{pStartDay,use_sql_current_day});
+        boolean isEof = c.moveToFirst();
+        while (isEof) {
+
+            ret = c.getInt(0);
+            isEof = c.moveToNext();
+
+        }
+
+        return ret;
+
     }
 
     // これがないとGestureDetectorが動かない
@@ -379,7 +375,7 @@ public class MainActivity extends Abstract implements View.OnClickListener {
         }
 
 
-        String current_day_used_sql = String.valueOf(current_year) + "-" + String.valueOf(current_month);
+        String current_day_used_sql = String.valueOf(current_year) + "-" + zeroPadding(String.valueOf(current_month));
 
 
 
@@ -447,7 +443,11 @@ public class MainActivity extends Abstract implements View.OnClickListener {
 
         //目標貯金額÷日数で1日あたりの使用可能金額を算出
         //availableAmountの戻り値をsetTextするとレイアウトばぐってわろた。原因不明
-        //available_amount.setText(String.valueOf(availableAmount(savings_amount,start_day,end_day)));
+        //終了日までの残り日数
+        int days_left = daysLeftCalculation(end_day);
+        //開始日から現在までの使用金額
+        int usage_amount = curentUsageAmount(start_day);
+        available_amount.setText(String.valueOf(availableAmount(Integer.parseInt(savings_amount),days_left,usage_amount)));
         available_amount.setGravity(Gravity.CENTER);
         availableAmountLayout.addView(available_amount, MP, WC);
 

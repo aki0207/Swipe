@@ -37,9 +37,9 @@
                 android:id="@+id/linearLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_alignBottom="@+id/go_edit_page"
+                android:layout_alignBottom="@+id/go_add_page"
                 android:layout_alignTop="@+id/back_button"
-                android:layout_toLeftOf="@+id/go_edit_page"
+                android:layout_toLeftOf="@+id/go_add_page"
                 android:layout_toRightOf="@+id/back_button">
 
                 <TextView
@@ -62,12 +62,12 @@
 
             <!--レイアウトのつじつま合わせに使ってる-->
             <Button
-                android:id="@+id/go_edit_page"
+                android:text="追加へ"
+                android:id="@+id/go_add_page"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentRight="true"
-                android:layout_alignParentTop="true"
-                android:visibility="invisible" />
+                android:layout_alignParentTop="true" />
 
         </RelativeLayout>
 

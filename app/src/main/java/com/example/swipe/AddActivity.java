@@ -15,6 +15,8 @@ import android.widget.Toast;
 
 public class AddActivity extends Abstract {
 
+    EditText category_detail;
+    EditText price_form;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -63,17 +65,64 @@ public class AddActivity extends Abstract {
                 // 選択されているカテゴリを取得
                 String selected_category = (String) spinner.getSelectedItem();
                 //カテゴリー詳細
-                EditText category_detail = (EditText) findViewById(R.id.category_detail_form);
+                category_detail = (EditText) findViewById(R.id.category_detail_form);
                 String entered_category_detail = category_detail.getText().toString();
                 //金額
-                EditText price_form = (EditText) findViewById(R.id.price_form);
+                price_form = (EditText) findViewById(R.id.price_form);
                 String entered_price = price_form.getText().toString();
+                //入力値チェック
+                if (checkInput(selected_category,entered_category_detail,entered_price)) {
+                    //追加する
+                    insertData(db, current_day, selected_category, Integer.parseInt(entered_price), entered_category_detail);
+                }
 
-                //追加する
-                insertData(db, current_day, selected_category, Integer.parseInt(entered_price), entered_category_detail);
             }
         });
 
+
+    }
+
+    //入力値チェック
+    public boolean checkInput (String pSelectedCategory, String pEnteredCategoryDetail, String pEnteredPrice ) {
+
+        boolean ret = true;
+        category_detail.setError(null);
+        price_form.setError(null);
+
+        if (pSelectedCategory == null || pSelectedCategory.length() == 0) {
+            ret = false;
+        } else if (pEnteredCategoryDetail == null || pEnteredCategoryDetail.length() == 0) {
+            category_detail.setError(getString(R.string.category_detail_not_yet_entered_error_message));
+            ret = false;
+        } else if (pEnteredCategoryDetail.length() > 15) {
+            category_detail.setError(getString(R.string.category_detail_over_enterd_text_length_error_message));
+            ret = false;
+        } else if (pEnteredPrice == null || pEnteredPrice.length() == 0) {
+            price_form.setError(getString(R.string.price_form_not_yet_entered_error_message));
+            ret = false;
+        } else if (pEnteredPrice.length() > 8) {
+            price_form.setError(getString(R.string.price_form_over_enterd_text_length_error_message));
+            ret = false;
+        } else if (isNumber(pEnteredPrice)) {
+            price_form.setError(getString(R.string.price_form_text_type_error_message));
+            ret = false;
+        }
+
+        return ret;
+    }
+
+
+    public boolean isNumber (String pNum) {
+
+        int num = 0;
+        boolean ret = true;
+        try {
+            num = Integer.parseInt(pNum);
+        } catch (NumberFormatException e) {
+            ret = false;
+        } finally {
+            return ret;
+        }
 
     }
 

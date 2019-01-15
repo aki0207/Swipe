@@ -48,7 +48,8 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="30dp"
             android:hint="何に使った?"
-            android:inputType="text" />
+            android:inputType="text"
+            android:maxLength="15"/>
 
 
         <EditText
@@ -57,7 +58,8 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="30dp"
             android:hint="金額"
-            android:inputType="number" />
+            android:inputType="number"
+            android:maxLength="8"/>
 
 
         <LinearLayout
