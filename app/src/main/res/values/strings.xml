@@ -15,5 +15,7 @@
     <string name="price_form_not_yet_entered_error_message">金額が未入力です</string>
     <string name="price_form_over_enterd_text_length_error_message">金額欄の文字数が多すぎます</string>
     <string name="price_form_text_type_error_message">金額欄は半角数字で入力してください</string>
+    <string name="start_day_over_date_error_message">過去を開始日に設定することはできません</string>
+    <string name="end_day_over_date_error_message">期間は180日以内に設定してください</string>
 
 </resources>

@@ -9,6 +9,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.Calendar;
@@ -16,6 +17,7 @@ import java.util.Calendar;
 public class SavingsAmountConfActivity extends Abstract {
 
     Calendar cal;
+    Calendar target_cal;
     int current_year;
     String selected_start_month;
     String selected_end_month;
@@ -26,6 +28,9 @@ public class SavingsAmountConfActivity extends Abstract {
     Spinner end_month_spinner;
     Spinner end_day_spinner;
 
+    EditText amount;
+    TextView error_message_for_start_day;
+    TextView error_message_for_end_day;
 
 
     ArrayAdapter start_month_adapter;
@@ -49,8 +54,8 @@ public class SavingsAmountConfActivity extends Abstract {
         }
 
         //開始月のセレクトボックス
-       start_month_spinner = (Spinner) findViewById(R.id.start_month_spinner);
-       start_month_adapter = new ArrayAdapter(this, android.R.layout.simple_spinner_item, start_month_list);
+        start_month_spinner = (Spinner) findViewById(R.id.start_month_spinner);
+        start_month_adapter = new ArrayAdapter(this, android.R.layout.simple_spinner_item, start_month_list);
 
         //monthのスピナーのリスナー
         start_month_adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -116,7 +121,6 @@ public class SavingsAmountConfActivity extends Abstract {
         start_day_spinner.setAdapter(start_day_adapter);
 
 
-
         //1年is12ヶ月
         final String[] end_month_list = new String[12];
         for (int i = 0; i < 12; i++) {
@@ -165,10 +169,6 @@ public class SavingsAmountConfActivity extends Abstract {
         });
 
 
-
-
-
-
         //戻るボタンリスナー
         Button back_button = (Button) findViewById(R.id.back_button);
         back_button.setOnClickListener(new View.OnClickListener() {
@@ -181,10 +181,10 @@ public class SavingsAmountConfActivity extends Abstract {
 
 
                 SharedPreferences data = getSharedPreferences("DataSave", Context.MODE_PRIVATE);
-                String testStartDay = data.getString("startDay","" );
-                String testEndDay = data.getString("endDay","");
-                String testAmount = data.getString("savingsAmount","");
-                boolean flg = data.getBoolean("flg",false);
+                String testStartDay = data.getString("startDay", "");
+                String testEndDay = data.getString("endDay", "");
+                String testAmount = data.getString("savingsAmount", "");
+                boolean flg = data.getBoolean("flg", false);
                 String flg_result;
                 if (flg) {
                     flg_result = "true";
@@ -193,7 +193,7 @@ public class SavingsAmountConfActivity extends Abstract {
                 }
 
                 Context context = getApplicationContext();
-                Toast.makeText(context , testStartDay + testEndDay + testAmount+ flg_result, Toast.LENGTH_LONG).show();
+                Toast.makeText(context, testStartDay + testEndDay + testAmount + flg_result, Toast.LENGTH_LONG).show();
 
 
             }
@@ -214,7 +214,7 @@ public class SavingsAmountConfActivity extends Abstract {
                 //終了月
                 String end_month = (String) end_month_spinner.getSelectedItem();
                 //終了日
-                String end_day = (String)end_day_spinner.getSelectedItem();
+                String end_day = (String) end_day_spinner.getSelectedItem();
 
                 //0埋め
                 start_month = zeroPadding(start_month);
@@ -222,28 +222,28 @@ public class SavingsAmountConfActivity extends Abstract {
                 end_month = zeroPadding(end_month);
                 end_day = zeroPadding(end_day);
 
-
-
-
                 //目標貯金額
-                EditText amount = (EditText)findViewById(R.id.amount);
+                amount = (EditText) findViewById(R.id.amount);
                 String savings_amount = amount.getText().toString();
 
-                //ファイルに書き込む
-                SharedPreferences prefs = getSharedPreferences("DataSave", Context.MODE_PRIVATE);
-                SharedPreferences.Editor editor = prefs.edit();
+                if (checkInput(start_month, start_day, end_month, end_day, savings_amount)) {
 
 
-
-                editor.putBoolean("flg",true);
-                editor.putString("startDay", start_month + start_day);
-                editor.putString("endDay", end_month + end_day);
-                editor.putString("savingsAmount",savings_amount);
-                editor.apply();
+                    //ファイルに書き込む
+                    SharedPreferences prefs = getSharedPreferences("DataSave", Context.MODE_PRIVATE);
+                    SharedPreferences.Editor editor = prefs.edit();
 
 
-                Context context = getApplicationContext();
-                Toast.makeText(context , "承りました", Toast.LENGTH_SHORT).show();
+                    editor.putBoolean("flg", true);
+                    editor.putString("startDay", start_month + start_day);
+                    editor.putString("endDay", end_month + end_day);
+                    editor.putString("savingsAmount", savings_amount);
+                    editor.apply();
+
+
+                    Context context = getApplicationContext();
+                    Toast.makeText(context, "承りました", Toast.LENGTH_SHORT).show();
+                }
 
 
             }
@@ -259,4 +259,107 @@ public class SavingsAmountConfActivity extends Abstract {
         day = getIntent().getStringExtra("DAY");
     }
 
+    //入力値チェック
+    public boolean checkInput(String pStartMonth, String pStartDay, String pEndMonth, String pEndDay, String pAmount) {
+
+        amount.setError(null);
+        error_message_for_start_day = (TextView)findViewById(R.id.error_messsage_for_start_day);
+        error_message_for_end_day = (TextView)findViewById(R.id.error_messsage_for_end_day);
+        boolean ret = true;
+
+        //起こり得ないが一応
+        if (pStartMonth == null || pStartMonth.length() == 0) {
+            ret = false;
+        } else if (pStartDay == null || pStartDay.length() == 0) {
+            ret = false;
+        } else if (pEndMonth == null || pEndMonth.length() == 0) {
+            ret = false;
+        } else if (pEndDay == null || pEndDay.length() == 0) {
+            ret = false;
+        } else if (pAmount == null || pAmount.length() == 0) {
+            amount.setError(getString(R.string.price_form_not_yet_entered_error_message));
+            ret = false;
+        } else if (pAmount.length() > 8) {
+            amount.setError(getString(R.string.price_form_over_enterd_text_length_error_message));
+            ret = false;
+        } else if (!isNumber(pAmount)) {
+            amount.setError(getString(R.string.price_form_text_type_error_message));
+            ret = false;
+        }
+
+        //開始日に過去が選択されていないか確認
+        cal = Calendar.getInstance();
+        target_cal = Calendar.getInstance();
+
+        //0埋め解除
+        if (pStartMonth.substring(0,1).equals("0")) {
+            pStartMonth = pStartMonth.substring(1,2);
+        }
+
+        if (pStartDay.substring(0,1).equals("0")) {
+            pStartDay = pStartDay.substring(1,2);
+        }
+
+        int current_start_month = Integer.parseInt(pStartMonth);
+        int current_start_day = Integer.parseInt(pStartDay);
+        //比較日を持ったインスタンス完成
+        target_cal.set(Calendar.MONTH,current_start_month - 1);
+        target_cal.set(Calendar.DATE,current_start_day);
+        //日数の差分計算
+        int result = getDiffDays(target_cal,cal);
+
+        if (result < 0) {
+            error_message_for_start_day.setText(getString(R.string.start_day_over_date_error_message));
+            ret = false;
+        }
+
+        //終了日が開始日180日を超えていないか
+        //0埋め解除
+        if (pEndMonth.substring(0,1).equals("0")) {
+            pEndMonth = pEndMonth.substring(1,2);
+        }
+
+        if (pEndDay.substring(0,1).equals("0")) {
+            pEndDay = pEndDay.substring(1,2);
+        }
+
+
+        int current_end_month = Integer.parseInt(pEndMonth);
+        int current_end_day = Integer.parseInt(pEndDay);
+
+        cal.set(Calendar.MONTH,current_end_month - 1);
+        cal.set(Calendar.DATE,current_end_day);
+
+        result = getDiffDays(cal,target_cal);
+
+        if (result > 180) {
+            error_message_for_end_day.setText(getString(R.string.end_day_over_date_error_message));
+            ret = false;
+        }
+        return ret;
+    }
+
+    public boolean isNumber(String pNum) {
+
+        int num = 0;
+        boolean ret = true;
+        try {
+            num = Integer.parseInt(pNum);
+        } catch (NumberFormatException e) {
+            ret = false;
+        } finally {
+            return ret;
+        }
+    }
+
+    public int getDiffDays(Calendar calendar1, Calendar calendar2) {
+        //==== ミリ秒単位での差分算出 ====//
+        long diffTime = calendar1.getTimeInMillis() - calendar2.getTimeInMillis();
+
+        //==== 日単位に変換 ====//
+        int MILLIS_OF_DAY = 1000 * 60 * 60 * 24;
+        int diffDays = (int)(diffTime / MILLIS_OF_DAY);
+
+        return diffDays;
+    }
 }

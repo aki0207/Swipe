@@ -19,6 +19,7 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.Calendar;
 
@@ -41,6 +42,8 @@ public class MainActivity extends Abstract implements View.OnClickListener {
     MyDrawerLayout drawerLayout;
     Calendar cal;
     private GestureDetector mGestureDetector;
+    SharedPreferences data;
+
 
 
 
@@ -99,11 +102,29 @@ public class MainActivity extends Abstract implements View.OnClickListener {
 
         //サイドメニュー内のボタン
         if (button_tag.equals("go")) {
+
             Intent intent = new Intent(MainActivity.this, SavingsAmountConfActivity.class);
             startActivity(intent);
+
         } else if (button_tag.equals("icon")) {
+
             Context context = getApplicationContext();
             drawerLayout.openDrawer(Gravity.LEFT);
+
+        //ギブアップボタン
+        } else if (button_tag.equals("giveUp")) {
+
+            data = getSharedPreferences("DataSave", Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = data.edit();
+            editor.putBoolean("flg", false);
+            editor.apply();
+
+            Context context = getApplicationContext();
+            Toast.makeText(context , "次またがんばりまっしょい", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(MainActivity.this,MainActivity.class);
+            startActivity(intent);
+
+
             //日付ボタン
         } else {
 
@@ -126,7 +147,6 @@ public class MainActivity extends Abstract implements View.OnClickListener {
             startActivity(intent);
 
         }
-
 
     }
 
@@ -216,7 +236,7 @@ public class MainActivity extends Abstract implements View.OnClickListener {
 
 
         //今日が何日か取得
-        cal = Calendar.getInstance();
+        Calendar w_cal = Calendar.getInstance();
 
         //終了日
         String end_month = pEndDay.substring(0,2);
@@ -239,7 +259,7 @@ public class MainActivity extends Abstract implements View.OnClickListener {
         target_end_day.set(Calendar.DATE,after_conversion_day);
 
         //現在から終了日までの日数
-        int days = getDiffDays(target_end_day,cal);
+        int days = getDiffDays(target_end_day,w_cal);
 
         //当日を含めたい
         return days + 1;
@@ -266,6 +286,7 @@ public class MainActivity extends Abstract implements View.OnClickListener {
          */
 
         int ret = 0;
+        Calendar w_cal = Calendar.getInstance();
 
 
 
@@ -277,9 +298,9 @@ public class MainActivity extends Abstract implements View.OnClickListener {
             db = helper.getReadableDatabase();
         }
 
-        int current_year = cal.get(cal.YEAR);
-        int current_month = cal.get(cal.MONTH) + 1;
-        int current_day = cal.get(cal.DATE);
+        int current_year = w_cal.get(w_cal.YEAR);
+        int current_month = w_cal.get(w_cal.MONTH) + 1;
+        int current_day = w_cal.get(w_cal.DATE);
 
         //sql用に今日の日付を整形
         String before_shaping_current_year = zeroPadding(String.valueOf(current_year));
@@ -359,11 +380,11 @@ public class MainActivity extends Abstract implements View.OnClickListener {
         headerRelativeLayout.addView(textView, center_params);
 
 
-        //貯金チャレンジ中ならヘッダー部右にアイコン表示
+
         SharedPreferences data = getSharedPreferences("DataSave", Context.MODE_PRIVATE);
         boolean savings_amount_flg = data.getBoolean("flg",false);
 
-        if (savings_amount_flg) {
+
 
             Button light_bulb_icon = new Button(this);
             light_bulb_icon.setBackgroundResource(R.drawable.light_bulb);
@@ -372,6 +393,9 @@ public class MainActivity extends Abstract implements View.OnClickListener {
             right_parms.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
             headerRelativeLayout.addView(light_bulb_icon,right_parms);
 
+        //貯金チャレンジ中でなければ隠す
+        if (!savings_amount_flg) {
+            light_bulb_icon.setVisibility(View.INVISIBLE);
         }
 
 
@@ -432,7 +456,6 @@ public class MainActivity extends Abstract implements View.OnClickListener {
         headerLayout.addView(availableAmountLayout);
 
         TextView available_amount = new TextView(this);
-
         available_amount.setText("0円");
 
 
@@ -450,6 +473,13 @@ public class MainActivity extends Abstract implements View.OnClickListener {
         available_amount.setText(String.valueOf(availableAmount(Integer.parseInt(savings_amount),days_left,usage_amount)));
         available_amount.setGravity(Gravity.CENTER);
         availableAmountLayout.addView(available_amount, MP, WC);
+
+
+        //貯金チャレンジ中でなければ隠す
+        if (!savings_amount_flg) {
+            available_amount_text.setVisibility(View.INVISIBLE);
+            available_amount.setVisibility(View.INVISIBLE);
+        }
 
 
 
@@ -629,6 +659,7 @@ public class MainActivity extends Abstract implements View.OnClickListener {
             }
         }
 
+
         //サイドメニュー部
         LinearLayout sideMenuLayout = new LinearLayout(this);
         sideMenuLayout.setOrientation(LinearLayout.VERTICAL);
@@ -639,6 +670,16 @@ public class MainActivity extends Abstract implements View.OnClickListener {
         drawerLayout.addView(sideMenuLayout);
 
 
+        //貯金チャレンジ中か否かで表示するメニューを変える
+
+
+
+
+
+
+
+
+
         //サイドメニュー内のView
         Button go_savings_amount_page_button = new Button(this);
         go_savings_amount_page_button.setText("貯金うぃる");
@@ -646,6 +687,22 @@ public class MainActivity extends Abstract implements View.OnClickListener {
         sideMenuLayout.addView(go_savings_amount_page_button, new LinearLayout.LayoutParams(MP, WC));
         go_savings_amount_page_button.setTag("go");
         go_savings_amount_page_button.setOnClickListener(this);
+
+        Button give_up_button = new Button(this);
+        give_up_button.setText("ぎぶあっぷ…");
+        give_up_button.setBackgroundColor(Color.GREEN);
+        sideMenuLayout.addView(give_up_button, new LinearLayout.LayoutParams(MP,WC));
+        give_up_button.setTag("giveUp");
+        give_up_button.setOnClickListener(this);
+
+        if (savings_amount_flg) {
+            go_savings_amount_page_button.setVisibility(View.GONE);
+        } else {
+            give_up_button.setVisibility(View.GONE);
+        }
+
+
+
 
     }
 

@@ -4,7 +4,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -103,7 +102,7 @@ public class AddActivity extends Abstract {
         } else if (pEnteredPrice.length() > 8) {
             price_form.setError(getString(R.string.price_form_over_enterd_text_length_error_message));
             ret = false;
-        } else if (isNumber(pEnteredPrice)) {
+        } else if (!isNumber(pEnteredPrice)) {
             price_form.setError(getString(R.string.price_form_text_type_error_message));
             ret = false;
         }

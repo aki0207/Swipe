@@ -3,8 +3,6 @@ package com.example.swipe;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -18,7 +16,9 @@ public class EditActivity extends Abstract {
     //更新元の情報を取得
     String target_category_detail = "";
     int target_price = 0;
-
+    EditText category_detail;
+    EditText price_form;
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,12 +41,12 @@ public class EditActivity extends Abstract {
         target_price = Integer.parseInt(evacute.substring(index + 1,evacute.length()));
 
         //EditTextに更新前の値をセットしておく
-        EditText category_detail_form = (EditText)findViewById(R.id.category_detail_form);
-        category_detail_form.setText(target_category_detail);
+        category_detail = (EditText)findViewById(R.id.category_detail_form);
+        category_detail.setText(target_category_detail);
         //カーソルをtextの一番後ろに
-        category_detail_form.setSelection(category_detail_form.getText().length());
+        category_detail.setSelection(category_detail.getText().length());
 
-        EditText price_form = (EditText)findViewById(R.id.price_form);
+        price_form = (EditText)findViewById(R.id.price_form);
         price_form.setHint(String.valueOf(target_price));
 
 
@@ -131,5 +131,49 @@ public class EditActivity extends Abstract {
             day = String.format("%02d", Integer.parseInt(day));
         }
     }
+
+    //入力値チェック
+    public boolean checkInput (String pSelectedCategory, String pEnteredCategoryDetail, String pEnteredPrice ) {
+
+        boolean ret = true;
+        category_detail.setError(null);
+        price_form.setError(null);
+
+        if (pSelectedCategory == null || pSelectedCategory.length() == 0) {
+            ret = false;
+        } else if (pEnteredCategoryDetail == null || pEnteredCategoryDetail.length() == 0) {
+            category_detail.setError(getString(R.string.category_detail_not_yet_entered_error_message));
+            ret = false;
+        } else if (pEnteredCategoryDetail.length() > 15) {
+            category_detail.setError(getString(R.string.category_detail_over_enterd_text_length_error_message));
+            ret = false;
+        } else if (pEnteredPrice == null || pEnteredPrice.length() == 0) {
+            price_form.setError(getString(R.string.price_form_not_yet_entered_error_message));
+            ret = false;
+        } else if (pEnteredPrice.length() > 8) {
+            price_form.setError(getString(R.string.price_form_over_enterd_text_length_error_message));
+            ret = false;
+        } else if (!isNumber(pEnteredPrice)) {
+            price_form.setError(getString(R.string.price_form_text_type_error_message));
+            ret = false;
+        }
+
+        return ret;
+    }
+
+    public boolean isNumber (String pNum) {
+
+        int num = 0;
+        boolean ret = true;
+        try {
+            num = Integer.parseInt(pNum);
+        } catch (NumberFormatException e) {
+            ret = false;
+        } finally {
+            return ret;
+        }
+
+    }
+
 
 }
