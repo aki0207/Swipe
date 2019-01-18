@@ -1,6 +1,8 @@
 package com.example.swipe;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteException;
@@ -43,6 +45,8 @@ public class MainActivity extends Abstract implements View.OnClickListener {
     Calendar cal;
     private GestureDetector mGestureDetector;
     SharedPreferences data;
+    String start_day;
+    String end_day;
 
 
 
@@ -59,6 +63,52 @@ public class MainActivity extends Abstract implements View.OnClickListener {
         getCurrentYearAndMonth();
         //表示するレイアウト作成
         makeLayout();
+
+
+        //ここで貯金チャレンジじゃなければ飛ばす。テストやからあとで消そうね
+
+        //ファイルに書き込む
+        data = getSharedPreferences("DataSave", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = data.edit();
+
+
+        if (data.getBoolean("flg", false)) {
+
+            //終了日ならダイアログ表示
+            if (isEndToday()) {
+
+                int result = resultAmountUsed();
+
+                // アラート表示
+                AlertDialog.Builder alertDialog = new AlertDialog.Builder(MainActivity.this);
+
+                // ダイアログの設定
+                alertDialog.setTitle("Dialog作ってみたよん");          //タイトル
+                alertDialog.setMessage("あなたは?");      //内容
+                alertDialog.setPositiveButton("私が神だ", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Context context = getApplication();
+                        Toast.makeText(context, "神様ぁ～", Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+                alertDialog.setNeutralButton("飛べない豚", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Context context = getApplication();
+                        Toast.makeText(context, "ぶひぃ～", Toast.LENGTH_SHORT).show();
+                    }
+                });
+                alertDialog.setNegativeButton("NPC", null)
+                        .show();
+            }
+
+
+        }
+
+
+
 
     }
 
@@ -111,10 +161,10 @@ public class MainActivity extends Abstract implements View.OnClickListener {
             Context context = getApplicationContext();
             drawerLayout.openDrawer(Gravity.LEFT);
 
-        //ギブアップボタン
+            //ギブアップボタン
         } else if (button_tag.equals("giveUp")) {
 
-            data = getSharedPreferences("DataSave", Context.MODE_PRIVATE);
+            SharedPreferences data = getSharedPreferences("DataSave", Context.MODE_PRIVATE);
             SharedPreferences.Editor editor = data.edit();
             editor.putBoolean("flg", false);
             editor.apply();
@@ -225,9 +275,16 @@ public class MainActivity extends Abstract implements View.OnClickListener {
     //(貯金目標額－今日までの使用金額)÷残り日数で1日あたりの使用可能金額を返す
     public int availableAmount (int pTartgetAmount, int pDaysLeft, int pUsageAmount) {
 
-        int ret;
-        ret = (pTartgetAmount - pUsageAmount) / pDaysLeft;
-        return ret;
+        try {
+
+            int ret;
+            ret = (pTartgetAmount - pUsageAmount) / pDaysLeft;
+            return ret;
+        } catch (ArithmeticException e) {
+            int error_ret = 777;
+            return  error_ret;
+        }
+
 
     }
 
@@ -386,12 +443,12 @@ public class MainActivity extends Abstract implements View.OnClickListener {
 
 
 
-            Button light_bulb_icon = new Button(this);
-            light_bulb_icon.setBackgroundResource(R.drawable.light_bulb);
-            //画面右上(親レイアウト右)に配置する
-            RelativeLayout.LayoutParams right_parms = new RelativeLayout.LayoutParams(WC, WC);
-            right_parms.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
-            headerRelativeLayout.addView(light_bulb_icon,right_parms);
+        Button light_bulb_icon = new Button(this);
+        light_bulb_icon.setBackgroundResource(R.drawable.light_bulb);
+        //画面右上(親レイアウト右)に配置する
+        RelativeLayout.LayoutParams right_parms = new RelativeLayout.LayoutParams(WC, WC);
+        right_parms.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+        headerRelativeLayout.addView(light_bulb_icon,right_parms);
 
         //貯金チャレンジ中でなければ隠す
         if (!savings_amount_flg) {
@@ -459,19 +516,24 @@ public class MainActivity extends Abstract implements View.OnClickListener {
         available_amount.setText("0円");
 
 
-        //設定ファイルの値取得
-        String savings_amount = data.getString("savingsAmount","");
-        String start_day = data.getString("startDay","");
-        String end_day = data.getString("endDay","");
+        if (savings_amount_flg) {
 
-        //目標貯金額÷日数で1日あたりの使用可能金額を算出
-        //availableAmountの戻り値をsetTextするとレイアウトばぐってわろた。原因不明
-        //終了日までの残り日数
-        int days_left = daysLeftCalculation(end_day);
-        //開始日から現在までの使用金額
-        int usage_amount = curentUsageAmount(start_day);
-        available_amount.setText(String.valueOf(availableAmount(Integer.parseInt(savings_amount),days_left,usage_amount)));
-        available_amount.setGravity(Gravity.CENTER);
+            //設定ファイルの値取得
+            String savings_amount = data.getString("savingsAmount","");
+            start_day = data.getString("startDay","");
+            end_day = data.getString("endDay","");
+
+            //目標貯金額÷日数で1日あたりの使用可能金額を算出
+            //availableAmountの戻り値をsetTextするとレイアウトばぐってわろた。原因不明
+            //終了日までの残り日数
+            int days_left = daysLeftCalculation(end_day);
+            //開始日から現在までの使用金額
+            int usage_amount = curentUsageAmount(start_day);
+            available_amount.setText(String.valueOf(availableAmount(Integer.parseInt(savings_amount),days_left,usage_amount)));
+            available_amount.setGravity(Gravity.CENTER);
+
+        }
+
         availableAmountLayout.addView(available_amount, MP, WC);
 
 
@@ -743,5 +805,55 @@ public class MainActivity extends Abstract implements View.OnClickListener {
             return false;
         }
     };
+
+    public void result () {
+
+
+    }
+
+    //今日が終了日かどうか
+    public boolean isEndToday () {
+
+        boolean ret = false;
+        cal = Calendar.getInstance();
+        //sql用に0埋めで整形
+        String current_month =  zeroPadding(String.valueOf(cal.get(cal.MONTH) + 1));
+        String current_day =  zeroPadding(String.valueOf(cal.get(cal.DATE)));
+        String after_shaping_current_day = current_month + current_day;
+
+       if (after_shaping_current_day.equals(end_day)) {
+           ret = true;
+        }
+        return ret;
+    }
+
+
+    //チャレンジ期間中使用した金額を返す
+    public int resultAmountUsed () {
+
+        int ret = 0;
+        if (helper == null) {
+            helper = new DbOpenHelper(this);
+        }
+        if (db == null) {
+            db = helper.getReadableDatabase();
+        }
+
+
+        String after_shaping_start_day = String.valueOf(current_year) + "-" + start_day;
+        String after_shaping_end_day = String.valueOf(current_year) + "-" + end_day;
+
+        String sql = "select sum(price) from amount_used where date between ? and ?";
+        //String sql = "select sum(price) from amount_used where date = ?";
+        c = db.rawQuery(sql, new String[]{after_shaping_start_day,after_shaping_end_day});
+        boolean isEof = c.moveToFirst();
+        while (isEof) {
+
+            ret = c.getInt(0);
+            isEof = c.moveToNext();
+
+        }
+        return ret;
+    }
 }
 
