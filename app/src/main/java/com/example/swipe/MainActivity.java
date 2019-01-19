@@ -45,8 +45,11 @@ public class MainActivity extends Abstract implements View.OnClickListener {
     Calendar cal;
     private GestureDetector mGestureDetector;
     SharedPreferences data;
+    SharedPreferences.Editor editor;
     String start_day;
     String end_day;
+    //貯金中かを表すフラグ
+    boolean savings_amount_flg;
 
 
 
@@ -59,52 +62,21 @@ public class MainActivity extends Abstract implements View.OnClickListener {
 
         //スワイプ処理のリスナー
         mGestureDetector = new GestureDetector(this, mOnGestureListener);
+
+        data = getSharedPreferences("DataSave", Context.MODE_PRIVATE);
+        editor = data.edit();
+        //貯金中か判定
+        savings_amount_flg = data.getBoolean("flg",false);
         //年、月取得
         getCurrentYearAndMonth();
         //表示するレイアウト作成
         makeLayout();
 
-
-        //ここで貯金チャレンジじゃなければ飛ばす。テストやからあとで消そうね
-
-        //ファイルに書き込む
-        data = getSharedPreferences("DataSave", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = data.edit();
-
-
-        if (data.getBoolean("flg", false)) {
-
+        if (savings_amount_flg) {
             //終了日ならダイアログ表示
             if (isEndToday()) {
-
-                int result = resultAmountUsed();
-
-                // アラート表示
-                AlertDialog.Builder alertDialog = new AlertDialog.Builder(MainActivity.this);
-
-                // ダイアログの設定
-                alertDialog.setTitle("Dialog作ってみたよん");          //タイトル
-                alertDialog.setMessage("あなたは?");      //内容
-                alertDialog.setPositiveButton("私が神だ", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        Context context = getApplication();
-                        Toast.makeText(context, "神様ぁ～", Toast.LENGTH_SHORT).show();
-                    }
-                });
-
-                alertDialog.setNeutralButton("飛べない豚", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        Context context = getApplication();
-                        Toast.makeText(context, "ぶひぃ～", Toast.LENGTH_SHORT).show();
-                    }
-                });
-                alertDialog.setNegativeButton("NPC", null)
-                        .show();
+                endNotification();
             }
-
-
         }
 
 
@@ -112,7 +84,7 @@ public class MainActivity extends Abstract implements View.OnClickListener {
 
     }
 
-    //とりま日付回収
+    //現在の月と日をクラス変数にセット
     public void getCurrentYearAndMonth () {
 
         current_year = getIntent().getIntExtra("YEAR", -999);
@@ -124,13 +96,13 @@ public class MainActivity extends Abstract implements View.OnClickListener {
 
             current_year = cal.get(Calendar.YEAR);
             current_month = cal.get(Calendar.MONTH) + 1;
-            //0月なんてものは存在しない
+            //1以下なら去年の12月へ
         } else if (current_month < 1) {
 
             current_year = current_year - 1;
             current_month = 12;
 
-            //13月なんてものも存在しない
+            //12以上なら来年の1月へ
         } else if (current_month > 12) {
 
             current_year = current_year + 1;
@@ -387,7 +359,7 @@ public class MainActivity extends Abstract implements View.OnClickListener {
         return mGestureDetector.onTouchEvent(event);
     }
 
-    //レイアウト部分
+    //レイアウト作成
     public void makeLayout() {
 
           /* ヘッダー部分作成
@@ -400,7 +372,7 @@ public class MainActivity extends Abstract implements View.OnClickListener {
         drawerLayout.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                //これでボタン上でもスワイプが可能
+                //タッチ処理があった時、スワイプがどうかを始めに判断する
                 return mGestureDetector.onTouchEvent(event);
             }
         });
@@ -418,6 +390,7 @@ public class MainActivity extends Abstract implements View.OnClickListener {
         headerRelativeLayout.setBackgroundColor(Color.parseColor("#4169e1"));
         headerLayout.addView(headerRelativeLayout, MP, WC);
 
+        //画面左上のアイコン。押すとサイドメニューが開く
         Button header_icon_button = new Button(this);
         header_icon_button.setBackgroundResource(R.drawable.side_menu);
         header_icon_button.setTag("icon");
@@ -437,12 +410,7 @@ public class MainActivity extends Abstract implements View.OnClickListener {
         headerRelativeLayout.addView(textView, center_params);
 
 
-
-        SharedPreferences data = getSharedPreferences("DataSave", Context.MODE_PRIVATE);
-        boolean savings_amount_flg = data.getBoolean("flg",false);
-
-
-
+        //貯金中なら表示されるアイコン
         Button light_bulb_icon = new Button(this);
         light_bulb_icon.setBackgroundResource(R.drawable.light_bulb);
         //画面右上(親レイアウト右)に配置する
@@ -450,13 +418,12 @@ public class MainActivity extends Abstract implements View.OnClickListener {
         right_parms.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
         headerRelativeLayout.addView(light_bulb_icon,right_parms);
 
-        //貯金チャレンジ中でなければ隠す
+        //貯金中でなければ隠す
         if (!savings_amount_flg) {
             light_bulb_icon.setVisibility(View.INVISIBLE);
         }
 
 
-        String current_day_used_sql = String.valueOf(current_year) + "-" + zeroPadding(String.valueOf(current_month));
 
 
 
@@ -477,24 +444,24 @@ public class MainActivity extends Abstract implements View.OnClickListener {
         relativeLayout.addView(the_amount_text, top_center_params);
 
 
-        //金額
+        //当月使用した金額
         LinearLayout amountLayout = new LinearLayout(this);
         LinearLayout.LayoutParams amountParams = new LinearLayout.LayoutParams(MP, WC);
         amountParams.setMargins(0, 30, 0, 0);
         amountLayout.setLayoutParams(amountParams);
         headerLayout.addView(amountLayout);
 
+
         TextView the_amount = new TextView(this);
         the_amount.setText("0円");
         //当月の総使用額を取得
+        String current_day_used_sql = String.valueOf(current_year) + "-" + zeroPadding(String.valueOf(current_month));
         the_amount = calculateTotalAmount(the_amount, current_day_used_sql);
         the_amount.setGravity(Gravity.CENTER);
         amountLayout.addView(the_amount, MP, WC);
 
 
-
-
-        //貯金チャレンジ中に表示される文言
+        //貯金中なら表示される文言
         RelativeLayout secondRelativeLayout = new RelativeLayout(this);
         headerLayout.addView(secondRelativeLayout);
 
@@ -506,29 +473,26 @@ public class MainActivity extends Abstract implements View.OnClickListener {
         secondRelativeLayout.addView(available_amount_text, top_center_params);
 
 
-
-        //金額
+        //1日辺り使用可能金額
         LinearLayout availableAmountLayout = new LinearLayout(this);
         availableAmountLayout.setLayoutParams(amountParams);
         headerLayout.addView(availableAmountLayout);
 
         TextView available_amount = new TextView(this);
-        available_amount.setText("0円");
-
 
         if (savings_amount_flg) {
 
-            //設定ファイルの値取得
+            //設定ファイルから目標金額,開始日,終了日を取得
             String savings_amount = data.getString("savingsAmount","");
             start_day = data.getString("startDay","");
             end_day = data.getString("endDay","");
 
-            //目標貯金額÷日数で1日あたりの使用可能金額を算出
-            //availableAmountの戻り値をsetTextするとレイアウトばぐってわろた。原因不明
+            //(目標貯金額-開始日から現在までの使用金額)÷日数で1日あたりの使用可能金額を算出
             //終了日までの残り日数
             int days_left = daysLeftCalculation(end_day);
             //開始日から現在までの使用金額
             int usage_amount = curentUsageAmount(start_day);
+            //計算結果をセット
             available_amount.setText(String.valueOf(availableAmount(Integer.parseInt(savings_amount),days_left,usage_amount)));
             available_amount.setGravity(Gravity.CENTER);
 
@@ -544,9 +508,6 @@ public class MainActivity extends Abstract implements View.OnClickListener {
         }
 
 
-
-
-
         //カレンダー部分を作成していく
         LinearLayout base_layout = new LinearLayout(this);
         base_layout.setOrientation(LinearLayout.VERTICAL);
@@ -554,16 +515,11 @@ public class MainActivity extends Abstract implements View.OnClickListener {
         headerLayout.addView(base_layout);
 
 
-
-
         //レイアウトのマージン(高さ)を設定する
         LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) base_layout.getLayoutParams();
         params.setMargins(0, 290, 0, 0);
         base_layout.setLayoutParams(params);
-        //base_layout.setLayoutParams(params);
 
-
-        //レイアウトを入れ子にする
         LinearLayout linearLayout = new LinearLayout(this);
         linearLayout.setOrientation(LinearLayout.HORIZONTAL);
         linearLayout.setLayoutParams(new LinearLayout.LayoutParams(MP, MP, 1));
@@ -607,11 +563,10 @@ public class MainActivity extends Abstract implements View.OnClickListener {
         saturday.setGravity(Gravity.CENTER);
         saturday.setBackgroundResource(R.drawable.text_layout);
 
-        //xmlファイルで言うところのlayout_weight?
+        //弟2引き数にこいつ入れたらlayout_weight = 1と同じ効果に
         LinearLayout.LayoutParams param1 = new LinearLayout.LayoutParams(MP, MP);
         param1.weight = 1.0f;
 
-        //なんか知らんけど弟2引き数にこいつ入れたらlayout_weight = 1と同じ効果になるっぽい
         linearLayout.addView(sunday, param1);
         linearLayout.addView(monday, param1);
         linearLayout.addView(tuesday, param1);
@@ -620,7 +575,7 @@ public class MainActivity extends Abstract implements View.OnClickListener {
         linearLayout.addView(friday, param1);
         linearLayout.addView(saturday, param1);
 
-        //レイアウトを入れ子にする
+
         linearLayout = new LinearLayout(this);
         linearLayout.setOrientation(LinearLayout.HORIZONTAL);
         linearLayout.setLayoutParams(new LinearLayout.LayoutParams(MP, MP, 1));
@@ -639,7 +594,7 @@ public class MainActivity extends Abstract implements View.OnClickListener {
         final int start_index = cal.get(Calendar.DAY_OF_WEEK);
         //今月の1日の曜日までを先月の末尾日を表示して埋めるための数字
         last_month_max_day = last_month_max_day - (start_index - 2);
-
+        //穴埋め用
         TextView ohter_day;
         Button current_day;
 
@@ -656,7 +611,7 @@ public class MainActivity extends Abstract implements View.OnClickListener {
 
         }
 
-
+        //当月の日数分ボタン生成
         for (int i = 1; i <= max_day; i++) {
 
             cal.set(Calendar.DATE, i);
@@ -684,15 +639,14 @@ public class MainActivity extends Abstract implements View.OnClickListener {
                 current_day.setTextColor(Color.parseColor("#ff0000"));
             }
 
-            //ボタンに識別子を持たせる
+            //何日が押されたか判別できるようにボタンに識別子を持たせる
             obj = i;
             current_day.setTag(obj);
             current_day.setOnClickListener(this);
-
             linearLayout.addView(current_day, param1);
 
 
-            //土曜日なら次の列へ
+            //土曜日まで生成したら次の列へ
             if (Calendar.SATURDAY == cal.get(Calendar.DAY_OF_WEEK)) {
 
                 linearLayout = new LinearLayout(this);
@@ -732,17 +686,8 @@ public class MainActivity extends Abstract implements View.OnClickListener {
         drawerLayout.addView(sideMenuLayout);
 
 
-        //貯金チャレンジ中か否かで表示するメニューを変える
 
-
-
-
-
-
-
-
-
-        //サイドメニュー内のView
+        //サイドメニュー内のボタン
         Button go_savings_amount_page_button = new Button(this);
         go_savings_amount_page_button.setText("貯金うぃる");
         go_savings_amount_page_button.setBackgroundColor(Color.GREEN);
@@ -757,14 +702,12 @@ public class MainActivity extends Abstract implements View.OnClickListener {
         give_up_button.setTag("giveUp");
         give_up_button.setOnClickListener(this);
 
+        //貯金中か否かで表示するボタンを変えている
         if (savings_amount_flg) {
             go_savings_amount_page_button.setVisibility(View.GONE);
         } else {
             give_up_button.setVisibility(View.GONE);
         }
-
-
-
 
     }
 
@@ -806,10 +749,6 @@ public class MainActivity extends Abstract implements View.OnClickListener {
         }
     };
 
-    public void result () {
-
-
-    }
 
     //今日が終了日かどうか
     public boolean isEndToday () {
@@ -854,6 +793,69 @@ public class MainActivity extends Abstract implements View.OnClickListener {
 
         }
         return ret;
+    }
+
+    //終了した旨を伝えるダイアログ表示
+    public void endNotification () {
+
+
+        //目標金額
+        int target_amount =  Integer.parseInt(data.getString("savingsAmount", "0"));
+        //期間中使用金額
+        int amount_used = resultAmountUsed();
+
+        boolean judge_flg = false;
+        //差額
+        int difference = target_amount - amount_used;
+
+        //目標金額-使用金額が0以上なら成功
+        if (difference >= 0) {
+            judge_flg = true;
+        }
+
+
+
+        // アラート表示
+        android.support.v7.app.AlertDialog.Builder alertDialog = new android.support.v7.app.AlertDialog.Builder(MainActivity.this);
+        alertDialog.setTitle("結果発表！！");
+
+        if (judge_flg) {
+            alertDialog.setMessage("成功です！使用額は" + String.valueOf(amount_used) + "円で、" + String.valueOf(difference) + "円の貯金に成功しました！");
+        } else {
+            alertDialog.setMessage("失敗です…。使用額は" + String.valueOf(amount_used) + "円で、" + String.valueOf(difference) + "円でした…");
+        }
+
+        alertDialog.setPositiveButton("閉じる", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+                //貯金チャレンジ終了
+                editor.putBoolean("flg", false);
+                editor.apply();
+
+                Intent intent = new Intent(MainActivity.this,MainActivity.class);
+                startActivity(intent);
+
+            }
+        });
+
+
+        //追加
+        alertDialog.setNegativeButton("詳細を確認", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+
+                //貯金チャレンジ終了
+                editor.putBoolean("flg", false);
+                editor.apply();
+
+                Intent intent = new Intent(MainActivity.this,MainActivity.class);
+                startActivity(intent);
+
+            }
+        }).show();
+
     }
 }
 
