@@ -466,7 +466,7 @@ public class MainActivity extends Abstract implements View.OnClickListener {
         headerLayout.addView(secondRelativeLayout);
 
         TextView available_amount_text = new TextView(this);
-        available_amount_text.setText("1日辺り使える金額");
+        available_amount_text.setText("使用可能金額");
         available_amount_text.setId(View.generateViewId());
         available_amount_text.setBackgroundResource(R.drawable.under_line);
         available_amount_text.setTextSize(24);
@@ -504,7 +504,7 @@ public class MainActivity extends Abstract implements View.OnClickListener {
         //貯金チャレンジ中でなければ隠す
         if (!savings_amount_flg) {
             available_amount_text.setVisibility(View.INVISIBLE);
-            available_amount.setVisibility(View.INVISIBLE);
+            available_amount.setVisibility(View.GONE);
         }
 
 
@@ -515,10 +515,6 @@ public class MainActivity extends Abstract implements View.OnClickListener {
         headerLayout.addView(base_layout);
 
 
-        //レイアウトのマージン(高さ)を設定する
-        LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) base_layout.getLayoutParams();
-        params.setMargins(0, 290, 0, 0);
-        base_layout.setLayoutParams(params);
 
         LinearLayout linearLayout = new LinearLayout(this);
         linearLayout.setOrientation(LinearLayout.HORIZONTAL);
@@ -642,6 +638,14 @@ public class MainActivity extends Abstract implements View.OnClickListener {
             //何日が押されたか判別できるようにボタンに識別子を持たせる
             obj = i;
             current_day.setTag(obj);
+            //ボタン上でスワイプきかせる
+            current_day.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    //タッチ処理があった時、スワイプがどうかを始めに判断する
+                    return mGestureDetector.onTouchEvent(event);
+                }
+            });
             current_day.setOnClickListener(this);
             linearLayout.addView(current_day, param1);
 

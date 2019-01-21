@@ -4,4 +4,5 @@
     <dimen name="borderWidth">4dp</dimen>
     <!--アンダーラインとの距離-->
     <dimen name="borderPadding">4dp</dimen>
+
 </resources>
