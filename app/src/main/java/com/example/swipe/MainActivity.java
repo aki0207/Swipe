@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.database.sqlite.SQLiteException;
 import android.graphics.Color;
 import android.os.Build;
@@ -20,6 +21,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -158,6 +160,11 @@ public class MainActivity extends Abstract implements View.OnClickListener {
             datePickerDialog = new DatePickerDialog(this,
                     android.R.style.Theme_Holo_Dialog, DateSetListener, current_year,
                     current_month, 1);
+
+            //日はいらない。7.0以上では通用しないらしい
+            DatePicker datePicker = datePickerDialog.getDatePicker();
+            int dayId = Resources.getSystem().getIdentifier("day", "id", "android");
+            datePicker.findViewById(dayId).setVisibility(View.GONE);
 
             datePickerDialog.show();
 
@@ -889,12 +896,7 @@ public class MainActivity extends Abstract implements View.OnClickListener {
         public void onDateSet(android.widget.DatePicker datePicker, int year,
                               int monthOfYear, int dayOfMonth) {
 
-           /* // トーストとログ出力
-            Toast.makeText(
-                    MainActivity.this,
-                    "year:" + year + " monthOfYear:" + monthOfYear
-                            + " dayOfMonth:" + dayOfMonth + 1, Toast.LENGTH_LONG)
-                    .show();*/
+
            Intent intent = new Intent(MainActivity.this,MainActivity.class);
             intent.putExtra("YEAR", year);
             intent.putExtra("MONTH", monthOfYear + 1);
