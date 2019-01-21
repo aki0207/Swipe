@@ -1,6 +1,7 @@
 package com.example.swipe;
 
 import android.app.AlertDialog;
+import android.app.DatePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -11,6 +12,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.RequiresApi;
 import android.support.v4.widget.DrawerLayout;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.GestureDetector;
 import android.view.Gravity;
@@ -50,6 +52,8 @@ public class MainActivity extends Abstract implements View.OnClickListener {
     String end_day;
     //貯金中かを表すフラグ
     boolean savings_amount_flg;
+    //カレンダーダイアログ
+    DatePickerDialog datePickerDialog;
 
 
 
@@ -142,9 +146,20 @@ public class MainActivity extends Abstract implements View.OnClickListener {
             editor.apply();
 
             Context context = getApplicationContext();
-            Toast.makeText(context , "次またがんばりまっしょい", Toast.LENGTH_SHORT).show();
-            Intent intent = new Intent(MainActivity.this,MainActivity.class);
+            Toast.makeText(context, "次またがんばりまっしょい", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(MainActivity.this, MainActivity.class);
             startActivity(intent);
+
+
+        } else if (button_tag.equals("timeLeap")) {
+
+
+            // 日付設定ダイアログの作成・リスナの登録
+            datePickerDialog = new DatePickerDialog(this,
+                    android.R.style.Theme_Holo_Dialog, DateSetListener, current_year,
+                    current_month, 1);
+
+            datePickerDialog.show();
 
 
             //日付ボタン
@@ -706,6 +721,13 @@ public class MainActivity extends Abstract implements View.OnClickListener {
         give_up_button.setTag("giveUp");
         give_up_button.setOnClickListener(this);
 
+        Button time_leap_button = new Button(this);
+        time_leap_button.setText("タイムリープ");
+        time_leap_button.setBackgroundColor(Color.GREEN);
+        sideMenuLayout.addView(time_leap_button,new LinearLayout.LayoutParams(MP,WC));
+        time_leap_button.setTag("timeLeap");
+        time_leap_button.setOnClickListener(this);
+
         //貯金中か否かで表示するボタンを変えている
         if (savings_amount_flg) {
             go_savings_amount_page_button.setVisibility(View.GONE);
@@ -861,5 +883,24 @@ public class MainActivity extends Abstract implements View.OnClickListener {
         }).show();
 
     }
+
+    // 日付設定時のリスナ作成
+    DatePickerDialog.OnDateSetListener DateSetListener = new DatePickerDialog.OnDateSetListener() {
+        public void onDateSet(android.widget.DatePicker datePicker, int year,
+                              int monthOfYear, int dayOfMonth) {
+
+           /* // トーストとログ出力
+            Toast.makeText(
+                    MainActivity.this,
+                    "year:" + year + " monthOfYear:" + monthOfYear
+                            + " dayOfMonth:" + dayOfMonth + 1, Toast.LENGTH_LONG)
+                    .show();*/
+           Intent intent = new Intent(MainActivity.this,MainActivity.class);
+            intent.putExtra("YEAR", year);
+            intent.putExtra("MONTH", monthOfYear + 1);
+           startActivity(intent);
+
+        }
+    };
 }
 
