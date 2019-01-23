@@ -27,10 +27,10 @@ public class DbOpenHelper extends SQLiteOpenHelper {
         );
 
         // table row insert
-        db.execSQL("insert into amount_used(date,category,price,category_detail) values ('2018-1101','交遊費', 0,'盗んだバイク');");
-        db.execSQL("insert into amount_used(date,category,price,category_detail) values ('2018-1101','生活費', 0,'おいしめの雑草');");
-        db.execSQL("insert into amount_used(date,category,price,category_detail) values ('2018-1101','飲食費', 0,' ');");
-        db.execSQL("insert into amount_used(date,category,price,category_detail) values ('2018-1101','買い物費', 0,' ');");
+        db.execSQL("insert into amount_used(date,category,price,category_detail) values ('2018-1101','交遊', 0,'盗んだバイク');");
+        db.execSQL("insert into amount_used(date,category,price,category_detail) values ('2018-1101','生活', 0,'おいしめの雑草');");
+        db.execSQL("insert into amount_used(date,category,price,category_detail) values ('2018-1101','飲食', 0,' ');");
+        db.execSQL("insert into amount_used(date,category,price,category_detail) values ('2018-1101','買い物', 0,' ');");
         db.execSQL("insert into amount_used(date,category,price,category_detail) values ('2018-1101','その他1', 0,' ');");
         db.execSQL("insert into amount_used(date,category,price,category_detail) values ('2018-1101','その他2', 0,' ');");
 

@@ -36,6 +36,12 @@ public class Abstract extends AppCompatActivity  {
         return pValue;
     }
 
+    //intentから値を取得
+    public void getCurrentDay() {
+        year = getIntent().getStringExtra("YEAR");
+        month = getIntent().getStringExtra("MONTH");
+        day = getIntent().getStringExtra("DAY");
+    }
 
 
 

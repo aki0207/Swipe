@@ -1,6 +1,5 @@
 package com.example.swipe;
 
-import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -13,7 +12,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.RequiresApi;
 import android.support.v4.widget.DrawerLayout;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.GestureDetector;
 import android.view.Gravity;
@@ -58,6 +56,10 @@ public class MainActivity extends Abstract implements View.OnClickListener {
     DatePickerDialog datePickerDialog;
 
 
+    // 戻るボタン禁止
+    @Override
+    public void onBackPressed() {
+    }
 
 
     @RequiresApi(api = Build.VERSION_CODES.N)
@@ -162,12 +164,13 @@ public class MainActivity extends Abstract implements View.OnClickListener {
                     current_month, 1);
 
             //日はいらない。7.0以上では通用しないらしい
-            DatePicker datePicker = datePickerDialog.getDatePicker();
-            int dayId = Resources.getSystem().getIdentifier("day", "id", "android");
-            datePicker.findViewById(dayId).setVisibility(View.GONE);
+            if (Build.VERSION.SDK_INT < 24) {
+                DatePicker datePicker = datePickerDialog.getDatePicker();
+                int dayId = Resources.getSystem().getIdentifier("day", "id", "android");
+                datePicker.findViewById(dayId).setVisibility(View.GONE);
+            }
 
             datePickerDialog.show();
-
 
             //日付ボタン
         } else {
@@ -717,21 +720,25 @@ public class MainActivity extends Abstract implements View.OnClickListener {
         Button go_savings_amount_page_button = new Button(this);
         go_savings_amount_page_button.setText("貯金うぃる");
         go_savings_amount_page_button.setBackgroundColor(Color.GREEN);
-        sideMenuLayout.addView(go_savings_amount_page_button, new LinearLayout.LayoutParams(MP, WC));
+        sideMenuLayout.addView(go_savings_amount_page_button,MP,WC);
         go_savings_amount_page_button.setTag("go");
         go_savings_amount_page_button.setOnClickListener(this);
 
         Button give_up_button = new Button(this);
         give_up_button.setText("ぎぶあっぷ…");
         give_up_button.setBackgroundColor(Color.GREEN);
-        sideMenuLayout.addView(give_up_button, new LinearLayout.LayoutParams(MP,WC));
+        sideMenuLayout.addView(give_up_button, MP,WC);
         give_up_button.setTag("giveUp");
         give_up_button.setOnClickListener(this);
 
         Button time_leap_button = new Button(this);
         time_leap_button.setText("タイムリープ");
         time_leap_button.setBackgroundColor(Color.GREEN);
-        sideMenuLayout.addView(time_leap_button,new LinearLayout.LayoutParams(MP,WC));
+        //高さを調節
+        LinearLayout.LayoutParams hightParams = new LinearLayout.LayoutParams(MP, WC);
+        hightParams.setMargins(0, 20, 0, 0);
+        time_leap_button.setLayoutParams(hightParams);
+        sideMenuLayout.addView(time_leap_button);
         time_leap_button.setTag("timeLeap");
         time_leap_button.setOnClickListener(this);
 

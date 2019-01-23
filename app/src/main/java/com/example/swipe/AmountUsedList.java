@@ -17,9 +17,7 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 
-public class AmountUsedList extends Abstract {
-
-
+public class AmountUsedList extends Abstract implements View.OnClickListener {
 
     //ボタンにsetTagする用
     Object tag = 0;
@@ -28,6 +26,12 @@ public class AmountUsedList extends Abstract {
     Cursor c;
     SQLiteDatabase db;
     DbOpenHelper helper;
+    ArrayList<ArrayList<String>> w_results;
+
+    // 戻るボタン禁止
+    @Override
+    public void onBackPressed() {
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,45 +51,19 @@ public class AmountUsedList extends Abstract {
         readData(current_day);
 
 
-        //戻るボタンリスナー
+        //ボタンにそれぞれリスナーを登録する
+        //戻るボタン
         Button back_button = (Button) findViewById(R.id.back_button);
-        back_button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        back_button.setOnClickListener(this);
 
-                Intent intent = new Intent(AmountUsedList.this, MainActivity.class);
-                intent = setCurrentDay(intent, year, month, day);
-                startActivity(intent);
-
-            }
-        });
-
-        //追加画面へ
+        //追加画面へのボタン
         Button go_add_button = (Button) findViewById(R.id.go_add_page);
-        go_add_button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                Intent intent = new Intent(AmountUsedList.this, AddActivity.class);
-                intent = setCurrentDay(intent, String.valueOf(year), String.valueOf(month), String.valueOf(day));
-                startActivity(intent);
-
-            }
-        });
+        go_add_button.setOnClickListener(this);
 
         //クリアボタン
         Button clear_button = (Button) findViewById(R.id.clear_button);
-        clear_button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        clear_button.setOnClickListener(this);
 
-                clearData(current_day);
-                Intent intent = new Intent(AmountUsedList.this, AmountUsedList.class);
-                intent = setCurrentDay(intent, String.valueOf(year), String.valueOf(month), String.valueOf(day));
-                startActivity(intent);
-
-            }
-        });
 
     }
 
@@ -111,7 +89,7 @@ public class AmountUsedList extends Abstract {
         }
 
         //検索結果入れ物
-        ArrayList<ArrayList<String>> w_results = new ArrayList<ArrayList<String>>();
+        w_results = new ArrayList<ArrayList<String>>();
 
         //とってきたいのは項目名と金額
         sql = "select category,sum(price) from amount_used where date = ? group by category";
@@ -237,12 +215,40 @@ public class AmountUsedList extends Abstract {
 
     }
 
-    //intentから値を取得
-    public void getCurrentDay() {
 
-        year = getIntent().getStringExtra("YEAR");
-        month = getIntent().getStringExtra("MONTH");
-        day = getIntent().getStringExtra("DAY");
+
+    @Override
+    public void onClick(View v) {
+
+        if (v == findViewById(R.id.back_button)) {
+
+            Intent intent = new Intent(AmountUsedList.this, MainActivity.class);
+            intent = setCurrentDay(intent, year, month, day);
+            startActivity(intent);
+
+        } else if (v == findViewById(R.id.go_add_page)) {
+
+            Intent intent = new Intent(AmountUsedList.this, AddActivity.class);
+            intent = setCurrentDay(intent, String.valueOf(year), String.valueOf(month), String.valueOf(day));
+            startActivity(intent);
+
+        } else if (v == findViewById(R.id.clear_button)) {
+
+            if (w_results.size() == 0) {
+
+                Context context = getApplicationContext();
+                Toast.makeText(context,"消す値がありません…",Toast.LENGTH_SHORT).show();
+                return;
+
+            }
+
+            clearData(current_day);
+            Intent intent = new Intent(AmountUsedList.this, AmountUsedList.class);
+            intent = setCurrentDay(intent, String.valueOf(year), String.valueOf(month), String.valueOf(day));
+            startActivity(intent);
+
+        }
+
     }
 
 

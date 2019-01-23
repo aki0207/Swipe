@@ -21,7 +21,8 @@
         <activity android:name=".testActivity" />
         <activity android:name=".DetailActivity" />
         <activity android:name=".AddActivity" />
-        <activity android:name=".SavingsAmountConfActivity"></activity>
+        <activity android:name=".SavingsAmountConfActivity" />
+        <activity android:name=".ResultActivity"></activity>
     </application>
 
 </manifest>

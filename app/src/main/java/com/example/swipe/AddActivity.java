@@ -12,10 +12,16 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class AddActivity extends Abstract {
+public class AddActivity extends Abstract implements View.OnClickListener {
 
     EditText category_detail;
     EditText price_form;
+
+    // 戻るボタン禁止
+    @Override
+    public void onBackPressed() {
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -30,59 +36,23 @@ public class AddActivity extends Abstract {
         header.setText(year + "年" + month + "月" + day + "日");
 
         //1ケタなら0埋めかます
-        zeroPadding();
+        month = zeroPadding(month);
+        day = zeroPadding(day);
 
         //Sqlで使う
         current_day = year + "-" + month + day;
         helper = new DbOpenHelper(this);
 
-        //戻るボタンのリスナー
+        //ボタンのリスナー登録
         Button back_button = (Button) findViewById(R.id.back_button);
-        back_button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(AddActivity.this, AmountUsedList.class);
-                setCurrentDay(intent, year, month, day);
-                startActivity(intent);
-            }
-        });
-
-
+        back_button.setOnClickListener(this);
         Button add_button = (Button) findViewById(R.id.edit_button);
-        add_button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (helper == null) {
-                    helper = new DbOpenHelper(getApplicationContext());
-                }
-
-                if (db == null) {
-                    db = helper.getWritableDatabase();
-                }
-
-                Spinner spinner = (Spinner) findViewById(R.id.spinner);
-                // 選択されているカテゴリを取得
-                String selected_category = (String) spinner.getSelectedItem();
-                //カテゴリー詳細
-                category_detail = (EditText) findViewById(R.id.category_detail_form);
-                String entered_category_detail = category_detail.getText().toString();
-                //金額
-                price_form = (EditText) findViewById(R.id.price_form);
-                String entered_price = price_form.getText().toString();
-                //入力値チェック
-                if (checkInput(selected_category,entered_category_detail,entered_price)) {
-                    //追加する
-                    insertData(db, current_day, selected_category, Integer.parseInt(entered_price), entered_category_detail);
-                }
-
-            }
-        });
-
+        add_button.setOnClickListener(this);
 
     }
 
     //入力値チェック
-    public boolean checkInput (String pSelectedCategory, String pEnteredCategoryDetail, String pEnteredPrice ) {
+    public boolean checkInput(String pSelectedCategory, String pEnteredCategoryDetail, String pEnteredPrice) {
 
         boolean ret = true;
         category_detail.setError(null);
@@ -111,7 +81,7 @@ public class AddActivity extends Abstract {
     }
 
 
-    public boolean isNumber (String pNum) {
+    public boolean isNumber(String pNum) {
 
         int num = 0;
         boolean ret = true;
@@ -132,29 +102,52 @@ public class AddActivity extends Abstract {
         values.put("date", pDate);
         values.put("category", pCategory);
         values.put("price", pPrice);
-        values.put("category_detail",pCategoryDetail);
+        values.put("category_detail", pCategoryDetail);
 
         db.insert("amount_used", null, values);
         Context context = getApplication();
         Toast.makeText(context, "追加しました", Toast.LENGTH_SHORT).show();
     }
 
-    //intentから値を取得
-    public void getCurrentDay() {
-        year = getIntent().getStringExtra("YEAR");
-        month = getIntent().getStringExtra("MONTH");
-        day = getIntent().getStringExtra("DAY");
-    }
 
-    public void zeroPadding() {
 
-        //1ケタなら0埋めかます
-        if (month.length() == 1) {
-            month = String.format("%02d", Integer.parseInt(month));
+
+
+    @Override
+    public void onClick(View v) {
+
+        if (v == findViewById(R.id.back_button)) {
+
+            Intent intent = new Intent(AddActivity.this, AmountUsedList.class);
+            setCurrentDay(intent, year, month, day);
+            startActivity(intent);
+
+        } else {
+
+            if (helper == null) {
+                helper = new DbOpenHelper(getApplicationContext());
+            }
+
+            if (db == null) {
+                db = helper.getWritableDatabase();
+            }
+
+            Spinner spinner = (Spinner) findViewById(R.id.spinner);
+            // 選択されているカテゴリを取得
+            String selected_category = (String) spinner.getSelectedItem();
+            //カテゴリー詳細
+            category_detail = (EditText) findViewById(R.id.category_detail_form);
+            String entered_category_detail = category_detail.getText().toString();
+            //金額
+            price_form = (EditText) findViewById(R.id.price_form);
+            String entered_price = price_form.getText().toString();
+            //入力値チェック
+            if (checkInput(selected_category, entered_category_detail, entered_price)) {
+                //追加する
+                insertData(db, current_day, selected_category, Integer.parseInt(entered_price), entered_category_detail);
+            }
+
         }
 
-        if (day.length() == 1) {
-            day = String.format("%02d", Integer.parseInt(day));
-        }
     }
 }

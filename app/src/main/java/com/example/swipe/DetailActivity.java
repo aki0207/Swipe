@@ -3,6 +3,7 @@ package com.example.swipe;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.sqlite.SQLiteException;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
@@ -16,12 +17,17 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 
-public class DetailActivity extends Abstract {
+public class DetailActivity extends Abstract implements View.OnClickListener {
 
     //ボタンにsetTagする用
     Object tag = 0;
     Context context;
     String selected_category = "";
+
+    // 戻るボタン禁止
+    @Override
+    public void onBackPressed() {
+    }
 
 
     @Override
@@ -42,19 +48,13 @@ public class DetailActivity extends Abstract {
         //db情報読取
         readData(current_day, selected_category);
 
-        //戻るボタンリスナー
+        //ボタンリスナー
         Button back_button = (Button) findViewById(R.id.back_button);
-        back_button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                Intent intent = new Intent(DetailActivity.this, AmountUsedList.class);
-                intent = setCurrentDay(intent, year, month, day);
-                startActivity(intent);
-
-            }
-        });
-
+        back_button.setOnClickListener(this);
+        Button go_add_page_button = (Button)findViewById(R.id.go_add_page);
+        go_add_page_button.setOnClickListener(this);
+        Button clear_button = (Button)findViewById(R.id.clear_button);
+        clear_button.setOnClickListener(this);
 
     }
 
@@ -170,7 +170,6 @@ public class DetailActivity extends Abstract {
                             });
 
 
-
                             //追加
                             alertDialog.setNegativeButton("編集する", new DialogInterface.OnClickListener() {
                                 @Override
@@ -185,13 +184,6 @@ public class DetailActivity extends Abstract {
                             }).show();
 
 
-
-                          /*  tag = v.getTag();
-                            String selected_button = String.valueOf(tag);
-                            Intent intent = new Intent(AmountUsedList.this,DetailActivity.class);
-                            intent.putExtra("SELECTEDBUTTON",selected_button);
-                            startActivity(intent);*/
-
                         }
                     });
                 }
@@ -202,27 +194,66 @@ public class DetailActivity extends Abstract {
 
         }
 
-    /*    Button go_add_page_button = (Button)findViewById(R.id.go_add_page);
-        go_add_page_button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+    }
 
-                Intent intent = new Intent(DetailActivity.this, AddActivity.class);
-                intent = setCurrentDay(intent, year, month, day);
-                startActivity(intent);
 
+    //deleteかまして初期化する
+    public void clearData(String pCurrentDay) {
+
+        try {
+
+            if (helper == null) {
+                helper = new DbOpenHelper(this);
             }
-        });*/
+            if (db == null) {
+                db = helper.getReadableDatabase();
+            }
 
 
+            String sql = "delete from amount_used where date = ? and category = ?";
+            c = db.rawQuery(sql, new String[]{pCurrentDay,selected_category});
+            // 以下の文を実行しないとRecordは削除できない！
+            c.moveToFirst();
+            Context context = getApplicationContext();
+            Toast.makeText(context, "クリアしました", Toast.LENGTH_SHORT).show();
+
+            Intent intent = new Intent(DetailActivity.this, AmountUsedList.class);
+            intent = setCurrentDay(intent, year, month, day);
+            startActivity(intent);
+
+
+        } catch (SQLiteException e) {
+            e.printStackTrace();
+        } finally {
+            if (c != null) {
+                c.close();
+            }
+            if (db != null) {
+                db.close();
+            }
+
+        }
 
     }
 
-    //intentから値を取得
-    public void getCurrentDay() {
-        year = getIntent().getStringExtra("YEAR");
-        month = getIntent().getStringExtra("MONTH");
-        day = getIntent().getStringExtra("DAY");
+    @Override
+    public void onClick(View v) {
+
+        if (v == findViewById(R.id.back_button)) {
+
+            Intent intent = new Intent(DetailActivity.this, AmountUsedList.class);
+            intent = setCurrentDay(intent, year, month, day);
+            startActivity(intent);
+
+        } else if (v == findViewById(R.id.go_add_page)){
+
+            Intent intent = new Intent(DetailActivity.this, AddActivity.class);
+            intent = setCurrentDay(intent, year, month, day);
+            startActivity(intent);
+
+        } else {
+            clearData(current_day);
+        }
     }
 
 }
